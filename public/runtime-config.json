@@ -1,0 +1,6 @@
+{
+  "backendEnabled": false,
+  "appsScriptUrl": "",
+  "geminiEnabled": false,
+  "dataMode": "training"
+}
