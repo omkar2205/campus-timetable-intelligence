@@ -11,8 +11,17 @@ import {
   saveRemoteData
 } from "@/lib/backend";
 
-const STORAGE_KEY = "cti-working-demo-data-v4";
-const STAGED_STORAGE_KEY = "cti-working-demo-staged-v4";
+const STORAGE_KEY = "cti-platform-data-v5";
+const STAGED_STORAGE_KEY = "cti-platform-staged-v5";
+
+const SEEDED_CONFLICT_IDS = new Set(["C001", "C002", "C003", "C004", "C005"]);
+const SEEDED_CONFLICT_MODULES = new Set([
+  "MAN-CRIADV-26-022",
+  "BHM-SOL-26-053",
+  "BHM-EU-26-092",
+  "MAN-CRIADV-26-132",
+  "MAN-EU-26-152"
+]);
 
 type ImportType = "rooms" | "lecturers" | "studentGroups" | "modules" | "requirements";
 type BackendStatus = "Local" | "Connecting" | "Connected" | "Syncing" | "Error";
@@ -39,8 +48,23 @@ function hasStagedSchedulingData(value: AppData) {
   return value.rooms.length > 0 && value.lecturers.length > 0 && value.studentGroups.length > 0 && value.modules.length > 0;
 }
 
+function withoutSeededConflicts(value: AppData): AppData {
+  return {
+    ...value,
+    sessions: value.sessions.map(session => {
+      if (SEEDED_CONFLICT_MODULES.has(session.moduleCode) && session.conflict === "Capacity mismatch") {
+        const { conflict: _conflict, ...cleanSession } = session;
+        return cleanSession;
+      }
+      return session;
+    }),
+    conflicts: value.conflicts.filter(conflict => !SEEDED_CONFLICT_IDS.has(conflict.id || ""))
+  };
+}
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const [data, setData] = useState<AppData>(initialData);
+  const cleanInitialData = useMemo(() => withoutSeededConflicts(structuredClone(initialData)), []);
+  const [data, setData] = useState<AppData>(cleanInitialData);
   const [stagedData, setStagedData] = useState<AppData>(emptyData());
   const [loaded, setLoaded] = useState(false);
   const [backendConfig, setBackendConfig] = useState<RuntimeConfig>(defaultBackendConfig);
@@ -50,13 +74,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     let active = true;
 
     async function initialise() {
-      let localData = initialData;
+      let localData = cleanInitialData;
       let localStaged = emptyData();
 
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         const staged = localStorage.getItem(STAGED_STORAGE_KEY);
-        if (saved) localData = JSON.parse(saved);
+        if (saved) localData = withoutSeededConflicts(JSON.parse(saved));
         if (staged) localStaged = JSON.parse(staged);
       } catch {}
 
@@ -72,7 +96,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setBackendStatus("Connecting");
         try {
           const remoteData = await loadRemoteData(config);
-          if (active && remoteData && remoteData.rooms.length) setData(remoteData);
+          if (active && remoteData && remoteData.rooms.length) {
+            const cleanedRemote = withoutSeededConflicts(remoteData);
+            setData(cleanedRemote);
+            const removedSeededContent = cleanedRemote.conflicts.length !== remoteData.conflicts.length || cleanedRemote.sessions.some((session, index) => session.conflict !== remoteData.sessions[index]?.conflict);
+            if (removedSeededContent) void saveRemoteData(config, cleanedRemote).catch(error => console.error("Could not clean seeded backend conflicts.", error));
+          }
           if (active) setBackendStatus("Connected");
         } catch (error) {
           console.error("Backend load failed; continuing with browser storage.", error);
@@ -87,7 +116,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     void initialise();
     return () => { active = false; };
-  }, []);
+  }, [cleanInitialData]);
 
   useEffect(() => {
     if (loaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -114,7 +143,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     backendConfig,
     backendStatus,
     resetData: () => {
-      const restored = structuredClone(initialData);
+      const restored = withoutSeededConflicts(structuredClone(initialData));
       setData(restored);
       setStagedData(emptyData());
       try {
