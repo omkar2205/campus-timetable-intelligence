@@ -1,93 +1,2109 @@
 import { AppData, Conflict, Lecturer, Module, Room, SchedulingRequirement, Session, StudentGroup } from "@/types";
 
-export const courses = ["MBA", "MSc International Business", "BSc Computer Science", "MSc Data Analytics"];
-export const campuses = ["Main Campus", "City Campus", "Business School"];
+export const courses = [
+  "BPC",
+  "LLB",
+  "LLM",
+  "PGDL",
+  "SQE1"
+];
+export const campuses = [
+  "Birmingham",
+  "Manchester"
+];
 
 export const studentGroupsData: StudentGroup[] = [
-  { id: "G001", name: "MBA-Jan-2026", course: "MBA", studentCount: 96, campus: "Business School" },
-  { id: "G002", name: "MScIB-Sep-2026", course: "MSc International Business", studentCount: 52, campus: "Main Campus" },
-  { id: "G003", name: "BScCS-Year3", course: "BSc Computer Science", studentCount: 58, campus: "City Campus" },
-  { id: "G004", name: "MScDA-May-2026", course: "MSc Data Analytics", studentCount: 43, campus: "City Campus" }
+  {
+    "id": "BHM-MAC-BJ26/28B1",
+    "name": "MA Law Sep 2026",
+    "course": "PGDL",
+    "studentCount": 32,
+    "campus": "Birmingham"
+  },
+  {
+    "id": "MAN-BVC-FT26/27A1",
+    "name": "BPC Sep 2026",
+    "course": "BPC",
+    "studentCount": 41,
+    "campus": "Manchester"
+  },
+  {
+    "id": "BHM-PGDL-FT26/27A1",
+    "name": "Birmingham PGDL Sep 2026 A",
+    "course": "PGDL",
+    "studentCount": 48,
+    "campus": "Birmingham"
+  },
+  {
+    "id": "BHM-PGDL-FT26/27A2",
+    "name": "Birmingham PGDL Sep 2026 B",
+    "course": "PGDL",
+    "studentCount": 44,
+    "campus": "Birmingham"
+  },
+  {
+    "id": "BHM-SQE1-FT26/27A1",
+    "name": "Birmingham SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "studentCount": 54,
+    "campus": "Birmingham"
+  },
+  {
+    "id": "BHM-SQE1-PT26/27E1",
+    "name": "Birmingham SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "studentCount": 34,
+    "campus": "Birmingham"
+  },
+  {
+    "id": "BHM-BPC-FT26/27A1",
+    "name": "Birmingham BPC Sep 2026 A",
+    "course": "BPC",
+    "studentCount": 36,
+    "campus": "Birmingham"
+  },
+  {
+    "id": "BHM-LLM-FT26/27A1",
+    "name": "Birmingham LLM International Law Sep 2026",
+    "course": "LLM",
+    "studentCount": 28,
+    "campus": "Birmingham"
+  },
+  {
+    "id": "BHM-LLB-Y2-26/27A1",
+    "name": "Birmingham LLB Year 2",
+    "course": "LLB",
+    "studentCount": 82,
+    "campus": "Birmingham"
+  },
+  {
+    "id": "MAN-PGDL-FT26/27A1",
+    "name": "Manchester PGDL Sep 2026 A",
+    "course": "PGDL",
+    "studentCount": 46,
+    "campus": "Manchester"
+  },
+  {
+    "id": "MAN-SQE1-FT26/27A1",
+    "name": "Manchester SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "studentCount": 50,
+    "campus": "Manchester"
+  },
+  {
+    "id": "MAN-SQE1-PT26/27E1",
+    "name": "Manchester SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "studentCount": 30,
+    "campus": "Manchester"
+  },
+  {
+    "id": "MAN-BPC-FT26/27A2",
+    "name": "Manchester BPC Sep 2026 B",
+    "course": "BPC",
+    "studentCount": 38,
+    "campus": "Manchester"
+  },
+  {
+    "id": "MAN-LLM-FT26/27A1",
+    "name": "Manchester LLM Legal Practice Sep 2026",
+    "course": "LLM",
+    "studentCount": 26,
+    "campus": "Manchester"
+  },
+  {
+    "id": "MAN-LLB-Y2-26/27A1",
+    "name": "Manchester LLB Year 2",
+    "course": "LLB",
+    "studentCount": 76,
+    "campus": "Manchester"
+  },
+  {
+    "id": "MAN-MALAW-FT26/27A1",
+    "name": "Manchester MA Law Sep 2026 A",
+    "course": "PGDL",
+    "studentCount": 35,
+    "campus": "Manchester"
+  }
 ];
-
-export const studentGroups = studentGroupsData.map(g => g.name);
+export const studentGroups = studentGroupsData.map(group => group.name);
 
 export const modulesData: Module[] = [
-  { id: "M001", code: "BUS401", name: "Strategic Management", course: "MBA", lecturerId: "L001", lecturerName: "Dr. Ahmed Khan", weeklySessions: 2, hoursPerSession: 2, roomTypeRequired: "Lecture Hall", studentGroup: "MBA-Jan-2026" },
-  { id: "M002", code: "INT502", name: "Global Business", course: "MSc International Business", lecturerId: "L003", lecturerName: "Prof. James Wilson", weeklySessions: 2, hoursPerSession: 2, roomTypeRequired: "Seminar Room", studentGroup: "MScIB-Sep-2026" },
-  { id: "M003", code: "CS301", name: "Software Engineering", course: "BSc Computer Science", lecturerId: "L002", lecturerName: "Dr. Priya Sharma", weeklySessions: 3, hoursPerSession: 2, roomTypeRequired: "Computer Lab", studentGroup: "BScCS-Year3" },
-  { id: "M004", code: "DA501", name: "Data Visualisation", course: "MSc Data Analytics", lecturerId: "L004", lecturerName: "Dr. Sarah Thomas", weeklySessions: 2, hoursPerSession: 2, roomTypeRequired: "Computer Lab", studentGroup: "MScDA-May-2026" },
-  { id: "M005", code: "BUS515", name: "Leadership in Practice", course: "MBA", lecturerId: "L001", lecturerName: "Dr. Ahmed Khan", weeklySessions: 1, hoursPerSession: 2, roomTypeRequired: "Seminar Room", studentGroup: "MBA-Jan-2026" },
-  { id: "M006", code: "INT610", name: "International Market Entry", course: "MSc International Business", lecturerId: "L003", lecturerName: "Prof. James Wilson", weeklySessions: 1, hoursPerSession: 2, roomTypeRequired: "Hybrid", studentGroup: "MScIB-Sep-2026" }
+  {
+    "id": "M001",
+    "code": "BHM-CON-26-011",
+    "name": "Contract Law",
+    "course": "PGDL",
+    "lecturerId": "L1",
+    "lecturerName": "BARNES, Matthew",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "MA Law Sep 2026"
+  },
+  {
+    "id": "M002",
+    "code": "BHM-TORT-26-012",
+    "name": "Law of Tort",
+    "course": "PGDL",
+    "lecturerId": "L3",
+    "lecturerName": "CHEN, Amelia",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "MA Law Sep 2026"
+  },
+  {
+    "id": "M003",
+    "code": "BHM-CRI-26-013",
+    "name": "Criminal Law",
+    "course": "PGDL",
+    "lecturerId": "L5",
+    "lecturerName": "EVANS, Sophie",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "MA Law Sep 2026"
+  },
+  {
+    "id": "M004",
+    "code": "BHM-CIV-SEP-01(1)",
+    "name": "Civil Litigation",
+    "course": "BPC",
+    "lecturerId": "L2",
+    "lecturerName": "BUTLER, Holly",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "BPC Sep 2026"
+  },
+  {
+    "id": "M005",
+    "code": "MAN-CRIADV-26-022",
+    "name": "Criminal Advocacy",
+    "course": "BPC",
+    "lecturerId": "L4",
+    "lecturerName": "DAVIES, Oliver",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Moot Court",
+    "studentGroup": "BPC Sep 2026"
+  },
+  {
+    "id": "M006",
+    "code": "MAN-ETH-26-023",
+    "name": "Professional Ethics",
+    "course": "BPC",
+    "lecturerId": "L6",
+    "lecturerName": "FOSTER, Daniel",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "BPC Sep 2026"
+  },
+  {
+    "id": "M007",
+    "code": "BHM-CON-26-031",
+    "name": "Contract Law",
+    "course": "PGDL",
+    "lecturerId": "L7",
+    "lecturerName": "GREEN, Rebecca",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Birmingham PGDL Sep 2026 A"
+  },
+  {
+    "id": "M008",
+    "code": "BHM-TORT-26-032",
+    "name": "Law of Tort",
+    "course": "PGDL",
+    "lecturerId": "L9",
+    "lecturerName": "JONES, Aisha",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Birmingham PGDL Sep 2026 A"
+  },
+  {
+    "id": "M009",
+    "code": "BHM-CRI-26-033",
+    "name": "Criminal Law",
+    "course": "PGDL",
+    "lecturerId": "L11",
+    "lecturerName": "LEWIS, Grace",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Birmingham PGDL Sep 2026 A"
+  },
+  {
+    "id": "M010",
+    "code": "BHM-CON-26-041",
+    "name": "Contract Law",
+    "course": "PGDL",
+    "lecturerId": "L13",
+    "lecturerName": "PATEL, Nisha",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Birmingham PGDL Sep 2026 B"
+  },
+  {
+    "id": "M011",
+    "code": "BHM-TORT-26-042",
+    "name": "Law of Tort",
+    "course": "PGDL",
+    "lecturerId": "L15",
+    "lecturerName": "SHAW, Emily",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Birmingham PGDL Sep 2026 B"
+  },
+  {
+    "id": "M012",
+    "code": "BHM-CRI-26-043",
+    "name": "Criminal Law",
+    "course": "PGDL",
+    "lecturerId": "L1",
+    "lecturerName": "BARNES, Matthew",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Birmingham PGDL Sep 2026 B"
+  },
+  {
+    "id": "M013",
+    "code": "BHM-BUL-SEP-01(1)",
+    "name": "Business Law and Practice",
+    "course": "SQE1",
+    "lecturerId": "L3",
+    "lecturerName": "CHEN, Amelia",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Birmingham SQE1 Sep 2026 A"
+  },
+  {
+    "id": "M014",
+    "code": "BHM-FLK-26-052",
+    "name": "Functioning Legal Knowledge",
+    "course": "SQE1",
+    "lecturerId": "L5",
+    "lecturerName": "EVANS, Sophie",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Birmingham SQE1 Sep 2026 A"
+  },
+  {
+    "id": "M015",
+    "code": "BHM-SOL-26-053",
+    "name": "Solicitors Accounts",
+    "course": "SQE1",
+    "lecturerId": "L7",
+    "lecturerName": "GREEN, Rebecca",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "IT Suite",
+    "studentGroup": "Birmingham SQE1 Sep 2026 A"
+  },
+  {
+    "id": "M016",
+    "code": "BHM-BUL-26-061",
+    "name": "Business Law and Practice",
+    "course": "SQE1",
+    "lecturerId": "L9",
+    "lecturerName": "JONES, Aisha",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Birmingham SQE1 Sep 2026 Evening"
+  },
+  {
+    "id": "M017",
+    "code": "BHM-FLK-26-062",
+    "name": "Functioning Legal Knowledge",
+    "course": "SQE1",
+    "lecturerId": "L11",
+    "lecturerName": "LEWIS, Grace",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Birmingham SQE1 Sep 2026 Evening"
+  },
+  {
+    "id": "M018",
+    "code": "BHM-SOL-26-063",
+    "name": "Solicitors Accounts",
+    "course": "SQE1",
+    "lecturerId": "L13",
+    "lecturerName": "PATEL, Nisha",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "IT Suite",
+    "studentGroup": "Birmingham SQE1 Sep 2026 Evening"
+  },
+  {
+    "id": "M019",
+    "code": "BHM-CIV-26-071",
+    "name": "Civil Litigation",
+    "course": "BPC",
+    "lecturerId": "L15",
+    "lecturerName": "SHAW, Emily",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Birmingham BPC Sep 2026 A"
+  },
+  {
+    "id": "M020",
+    "code": "BHM-CRIADV-26-072",
+    "name": "Criminal Advocacy",
+    "course": "BPC",
+    "lecturerId": "L1",
+    "lecturerName": "BARNES, Matthew",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Moot Court",
+    "studentGroup": "Birmingham BPC Sep 2026 A"
+  },
+  {
+    "id": "M021",
+    "code": "BHM-ETH-26-073",
+    "name": "Professional Ethics",
+    "course": "BPC",
+    "lecturerId": "L3",
+    "lecturerName": "CHEN, Amelia",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Birmingham BPC Sep 2026 A"
+  },
+  {
+    "id": "M022",
+    "code": "BHM-INTLAW-26-081",
+    "name": "International Commercial Law",
+    "course": "LLM",
+    "lecturerId": "L5",
+    "lecturerName": "EVANS, Sophie",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Seminar Room",
+    "studentGroup": "Birmingham LLM International Law Sep 2026"
+  },
+  {
+    "id": "M023",
+    "code": "BHM-RES-26-082",
+    "name": "Research Methods",
+    "course": "LLM",
+    "lecturerId": "L7",
+    "lecturerName": "GREEN, Rebecca",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "IT Suite",
+    "studentGroup": "Birmingham LLM International Law Sep 2026"
+  },
+  {
+    "id": "M024",
+    "code": "BHM-ARB-26-083",
+    "name": "International Arbitration",
+    "course": "LLM",
+    "lecturerId": "L9",
+    "lecturerName": "JONES, Aisha",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Moot Court",
+    "studentGroup": "Birmingham LLM International Law Sep 2026"
+  },
+  {
+    "id": "M025",
+    "code": "BHM-EQU-26-091",
+    "name": "Equity and Trusts",
+    "course": "LLB",
+    "lecturerId": "L11",
+    "lecturerName": "LEWIS, Grace",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Lecture Theatre",
+    "studentGroup": "Birmingham LLB Year 2"
+  },
+  {
+    "id": "M026",
+    "code": "BHM-EU-26-092",
+    "name": "European Union Law",
+    "course": "LLB",
+    "lecturerId": "L13",
+    "lecturerName": "PATEL, Nisha",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Birmingham LLB Year 2"
+  },
+  {
+    "id": "M027",
+    "code": "MAN-CON-26-101",
+    "name": "Contract Law",
+    "course": "PGDL",
+    "lecturerId": "L8",
+    "lecturerName": "HARRIS, Samuel",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Manchester PGDL Sep 2026 A"
+  },
+  {
+    "id": "M028",
+    "code": "MAN-TORT-26-102",
+    "name": "Law of Tort",
+    "course": "PGDL",
+    "lecturerId": "L10",
+    "lecturerName": "KELLY, Thomas",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Manchester PGDL Sep 2026 A"
+  },
+  {
+    "id": "M029",
+    "code": "MAN-BUL-26-111",
+    "name": "Business Law and Practice",
+    "course": "SQE1",
+    "lecturerId": "L12",
+    "lecturerName": "MORGAN, Ethan",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Manchester SQE1 Sep 2026 A"
+  },
+  {
+    "id": "M030",
+    "code": "MAN-FLK-26-112",
+    "name": "Functioning Legal Knowledge",
+    "course": "SQE1",
+    "lecturerId": "L14",
+    "lecturerName": "ROBERTS, Jack",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Manchester SQE1 Sep 2026 A"
+  },
+  {
+    "id": "M031",
+    "code": "MAN-BUL-26-121",
+    "name": "Business Law and Practice",
+    "course": "SQE1",
+    "lecturerId": "L16",
+    "lecturerName": "TAYLOR, Liam",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Manchester SQE1 Sep 2026 Evening"
+  },
+  {
+    "id": "M032",
+    "code": "MAN-FLK-26-122",
+    "name": "Functioning Legal Knowledge",
+    "course": "SQE1",
+    "lecturerId": "L2",
+    "lecturerName": "BUTLER, Holly",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Manchester SQE1 Sep 2026 Evening"
+  },
+  {
+    "id": "M033",
+    "code": "MAN-CIV-26-131",
+    "name": "Civil Litigation",
+    "course": "BPC",
+    "lecturerId": "L4",
+    "lecturerName": "DAVIES, Oliver",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Manchester BPC Sep 2026 B"
+  },
+  {
+    "id": "M034",
+    "code": "MAN-CRIADV-26-132",
+    "name": "Criminal Advocacy",
+    "course": "BPC",
+    "lecturerId": "L6",
+    "lecturerName": "FOSTER, Daniel",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Moot Court",
+    "studentGroup": "Manchester BPC Sep 2026 B"
+  },
+  {
+    "id": "M035",
+    "code": "MAN-INTLAW-26-141",
+    "name": "International Commercial Law",
+    "course": "LLM",
+    "lecturerId": "L8",
+    "lecturerName": "HARRIS, Samuel",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Seminar Room",
+    "studentGroup": "Manchester LLM Legal Practice Sep 2026"
+  },
+  {
+    "id": "M036",
+    "code": "MAN-RES-26-142",
+    "name": "Research Methods",
+    "course": "LLM",
+    "lecturerId": "L10",
+    "lecturerName": "KELLY, Thomas",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "IT Suite",
+    "studentGroup": "Manchester LLM Legal Practice Sep 2026"
+  },
+  {
+    "id": "M037",
+    "code": "MAN-EQU-26-151",
+    "name": "Equity and Trusts",
+    "course": "LLB",
+    "lecturerId": "L12",
+    "lecturerName": "MORGAN, Ethan",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Lecture Theatre",
+    "studentGroup": "Manchester LLB Year 2"
+  },
+  {
+    "id": "M038",
+    "code": "MAN-EU-26-152",
+    "name": "European Union Law",
+    "course": "LLB",
+    "lecturerId": "L14",
+    "lecturerName": "ROBERTS, Jack",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Large Group",
+    "studentGroup": "Manchester LLB Year 2"
+  },
+  {
+    "id": "M039",
+    "code": "MAN-CON-26-161",
+    "name": "Contract Law",
+    "course": "PGDL",
+    "lecturerId": "L16",
+    "lecturerName": "TAYLOR, Liam",
+    "weeklySessions": 2,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Manchester MA Law Sep 2026 A"
+  },
+  {
+    "id": "M040",
+    "code": "MAN-TORT-26-162",
+    "name": "Law of Tort",
+    "course": "PGDL",
+    "lecturerId": "L2",
+    "lecturerName": "BUTLER, Holly",
+    "weeklySessions": 1,
+    "hoursPerSession": 2,
+    "roomTypeRequired": "Workshop room",
+    "studentGroup": "Manchester MA Law Sep 2026 A"
+  }
 ];
-
 export const modules = modulesData.map(({ code, name, course }) => ({ code, name, course }));
 
 export const lecturers: Lecturer[] = [
-  { id: "L001", name: "Dr. Ahmed Khan", department: "Business School", modules: ["BUS401", "BUS515"], weeklyHours: 18, availability: "Mon-Fri 09:00-17:00", workload: "High", maxWeeklyHours: 18, preferredCampus: "Business School" },
-  { id: "L002", name: "Dr. Priya Sharma", department: "Computing", modules: ["CS301", "DA501"], weeklyHours: 14, availability: "Mon-Thu 10:00-16:00", workload: "Normal", maxWeeklyHours: 20, preferredCampus: "City Campus" },
-  { id: "L003", name: "Prof. James Wilson", department: "International Business", modules: ["INT502", "INT610"], weeklyHours: 21, availability: "Tue-Fri 09:00-15:00", workload: "Overloaded", maxWeeklyHours: 16, preferredCampus: "Main Campus" },
-  { id: "L004", name: "Dr. Sarah Thomas", department: "Analytics", modules: ["DA501"], weeklyHours: 12, availability: "Mon, Wed, Thu", workload: "Normal", maxWeeklyHours: 18, preferredCampus: "City Campus" }
+  {
+    "id": "L1",
+    "name": "BARNES, Matthew",
+    "department": "Business School",
+    "modules": [
+      "BHM-CON-26-011",
+      "BHM-CRI-26-043",
+      "BHM-CRIADV-26-072"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Fri 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Birmingham",
+    "maxWeeklyHours": 35
+  },
+  {
+    "id": "L2",
+    "name": "BUTLER, Holly",
+    "department": "Law School",
+    "modules": [
+      "BHM-CIV-SEP-01(1)",
+      "MAN-FLK-26-122",
+      "MAN-TORT-26-162"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Thu 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Manchester",
+    "maxWeeklyHours": 28
+  },
+  {
+    "id": "L3",
+    "name": "CHEN, Amelia",
+    "department": "Law School",
+    "modules": [
+      "BHM-TORT-26-012",
+      "BHM-BUL-SEP-01(1)",
+      "BHM-ETH-26-073"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Fri 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Birmingham",
+    "maxWeeklyHours": 30
+  },
+  {
+    "id": "L4",
+    "name": "DAVIES, Oliver",
+    "department": "Bar Practice",
+    "modules": [
+      "MAN-CRIADV-26-022",
+      "MAN-CIV-26-131"
+    ],
+    "weeklyHours": 6,
+    "availability": "Tue - Fri 09:00 - 18:00",
+    "workload": "Normal",
+    "preferredCampus": "Manchester",
+    "maxWeeklyHours": 28
+  },
+  {
+    "id": "L5",
+    "name": "EVANS, Sophie",
+    "department": "Legal Practice",
+    "modules": [
+      "BHM-CRI-26-013",
+      "BHM-FLK-26-052",
+      "BHM-INTLAW-26-081"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Thu 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Birmingham",
+    "maxWeeklyHours": 32
+  },
+  {
+    "id": "L6",
+    "name": "FOSTER, Daniel",
+    "department": "Business School",
+    "modules": [
+      "MAN-ETH-26-023",
+      "MAN-CRIADV-26-132"
+    ],
+    "weeklyHours": 4,
+    "availability": "Mon/Wed/Fri 09:00 - 16:00",
+    "workload": "Normal",
+    "preferredCampus": "Manchester",
+    "maxWeeklyHours": 24
+  },
+  {
+    "id": "L7",
+    "name": "GREEN, Rebecca",
+    "department": "Law School",
+    "modules": [
+      "BHM-CON-26-031",
+      "BHM-SOL-26-053",
+      "BHM-RES-26-082"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Fri 10:00 - 18:00",
+    "workload": "Normal",
+    "preferredCampus": "Birmingham",
+    "maxWeeklyHours": 30
+  },
+  {
+    "id": "L8",
+    "name": "HARRIS, Samuel",
+    "department": "Legal Technology",
+    "modules": [
+      "MAN-CON-26-101",
+      "MAN-INTLAW-26-141"
+    ],
+    "weeklyHours": 8,
+    "availability": "Tue - Thu 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Manchester",
+    "maxWeeklyHours": 26
+  },
+  {
+    "id": "L9",
+    "name": "JONES, Aisha",
+    "department": "Bar Practice",
+    "modules": [
+      "BHM-TORT-26-032",
+      "BHM-BUL-26-061",
+      "BHM-ARB-26-083"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Fri 09:00 - 15:00",
+    "workload": "Normal",
+    "preferredCampus": "Birmingham",
+    "maxWeeklyHours": 28
+  },
+  {
+    "id": "L10",
+    "name": "KELLY, Thomas",
+    "department": "Law School",
+    "modules": [
+      "MAN-TORT-26-102",
+      "MAN-RES-26-142"
+    ],
+    "weeklyHours": 4,
+    "availability": "Mon - Thu 10:00 - 18:00",
+    "workload": "Normal",
+    "preferredCampus": "Manchester",
+    "maxWeeklyHours": 30
+  },
+  {
+    "id": "L11",
+    "name": "LEWIS, Grace",
+    "department": "Legal Practice",
+    "modules": [
+      "BHM-CRI-26-033",
+      "BHM-FLK-26-062",
+      "BHM-EQU-26-091"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Fri 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Birmingham",
+    "maxWeeklyHours": 32
+  },
+  {
+    "id": "L12",
+    "name": "MORGAN, Ethan",
+    "department": "Business School",
+    "modules": [
+      "MAN-BUL-26-111",
+      "MAN-EQU-26-151"
+    ],
+    "weeklyHours": 8,
+    "availability": "Tue/Wed/Thu 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Manchester",
+    "maxWeeklyHours": 25
+  },
+  {
+    "id": "L13",
+    "name": "PATEL, Nisha",
+    "department": "Law School",
+    "modules": [
+      "BHM-CON-26-041",
+      "BHM-SOL-26-063",
+      "BHM-EU-26-092"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Fri 09:00 - 16:00",
+    "workload": "Normal",
+    "preferredCampus": "Birmingham",
+    "maxWeeklyHours": 28
+  },
+  {
+    "id": "L14",
+    "name": "ROBERTS, Jack",
+    "department": "Legal Technology",
+    "modules": [
+      "MAN-FLK-26-112",
+      "MAN-EU-26-152"
+    ],
+    "weeklyHours": 4,
+    "availability": "Mon/Thu/Fri 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Manchester",
+    "maxWeeklyHours": 24
+  },
+  {
+    "id": "L15",
+    "name": "SHAW, Emily",
+    "department": "Bar Practice",
+    "modules": [
+      "BHM-TORT-26-042",
+      "BHM-CIV-26-071"
+    ],
+    "weeklyHours": 6,
+    "availability": "Tue - Fri 10:00 - 18:00",
+    "workload": "Normal",
+    "preferredCampus": "Birmingham",
+    "maxWeeklyHours": 26
+  },
+  {
+    "id": "L16",
+    "name": "TAYLOR, Liam",
+    "department": "Legal Practice",
+    "modules": [
+      "MAN-BUL-26-121",
+      "MAN-CON-26-161"
+    ],
+    "weeklyHours": 8,
+    "availability": "Mon - Fri 09:00 - 17:00",
+    "workload": "Normal",
+    "preferredCampus": "Manchester",
+    "maxWeeklyHours": 30
+  }
 ];
 
 export const rooms: Room[] = [
-  { id: "R001", room: "A101 Lecture Hall", building: "A Block", campus: "Main Campus", type: "Lecture Hall", capacity: 120, status: "Available" },
-  { id: "R002", room: "B204 Seminar Room", building: "B Block", campus: "Business School", type: "Seminar Room", capacity: 45, status: "Occupied" },
-  { id: "R003", room: "C305 Computer Lab", building: "C Block", campus: "City Campus", type: "Computer Lab", capacity: 60, status: "Available" },
-  { id: "R004", room: "D110 Auditorium", building: "D Block", campus: "Main Campus", type: "Auditorium", capacity: 250, status: "Maintenance" },
-  { id: "R005", room: "B310 Executive Suite", building: "B Block", campus: "Business School", type: "Hybrid", capacity: 80, status: "Available" }
+  {
+    "id": "BHM-123-WS",
+    "room": "123 Workshop",
+    "building": "A Block",
+    "campus": "Birmingham",
+    "type": "Workshop",
+    "capacity": 28,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-109-LG",
+    "room": "109 Large Group",
+    "building": "C Block",
+    "campus": "Birmingham",
+    "type": "Large Group",
+    "capacity": 40,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-201-WS",
+    "room": "201 Workshop",
+    "building": "A Block",
+    "campus": "Birmingham",
+    "type": "Workshop room",
+    "capacity": 32,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-202-WS",
+    "room": "202 Workshop",
+    "building": "A Block",
+    "campus": "Birmingham",
+    "type": "Workshop room",
+    "capacity": 36,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-210-LG",
+    "room": "210 Large Group",
+    "building": "A Block",
+    "campus": "Birmingham",
+    "type": "Large Group",
+    "capacity": 72,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-220-LT",
+    "room": "220 Lecture Theatre",
+    "building": "B Block",
+    "campus": "Birmingham",
+    "type": "Lecture Theatre",
+    "capacity": 120,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-221-LT",
+    "room": "221 Lecture Theatre",
+    "building": "B Block",
+    "campus": "Birmingham",
+    "type": "Lecture Theatre",
+    "capacity": 90,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-230-IT",
+    "room": "230 IT Suite",
+    "building": "B Block",
+    "campus": "Birmingham",
+    "type": "IT Suite",
+    "capacity": 40,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-231-IT",
+    "room": "231 IT Suite",
+    "building": "B Block",
+    "campus": "Birmingham",
+    "type": "IT Suite",
+    "capacity": 28,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-240-SR",
+    "room": "240 Seminar Room",
+    "building": "C Block",
+    "campus": "Birmingham",
+    "type": "Seminar Room",
+    "capacity": 24,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-241-SR",
+    "room": "241 Seminar Room",
+    "building": "C Block",
+    "campus": "Birmingham",
+    "type": "Seminar Room",
+    "capacity": 30,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-250-MC",
+    "room": "250 Moot Court",
+    "building": "C Block",
+    "campus": "Birmingham",
+    "type": "Moot Court",
+    "capacity": 38,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-260-HY",
+    "room": "260 Hybrid Room",
+    "building": "D Block",
+    "campus": "Birmingham",
+    "type": "Hybrid",
+    "capacity": 60,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-270-AUD",
+    "room": "270 Auditorium",
+    "building": "D Block",
+    "campus": "Birmingham",
+    "type": "Auditorium",
+    "capacity": 180,
+    "status": "Maintenance"
+  },
+  {
+    "id": "MAN-101-WS",
+    "room": "101 Workshop",
+    "building": "A Block",
+    "campus": "Manchester",
+    "type": "Workshop room",
+    "capacity": 30,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-102-WS",
+    "room": "102 Workshop",
+    "building": "A Block",
+    "campus": "Manchester",
+    "type": "Workshop room",
+    "capacity": 36,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-109-LG",
+    "room": "109 Large Group",
+    "building": "A Block",
+    "campus": "Manchester",
+    "type": "Large Group",
+    "capacity": 48,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-110-LG",
+    "room": "110 Large Group",
+    "building": "A Block",
+    "campus": "Manchester",
+    "type": "Large Group",
+    "capacity": 72,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-120-LT",
+    "room": "120 Lecture Theatre",
+    "building": "B Block",
+    "campus": "Manchester",
+    "type": "Lecture Theatre",
+    "capacity": 110,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-130-IT",
+    "room": "130 IT Suite",
+    "building": "B Block",
+    "campus": "Manchester",
+    "type": "IT Suite",
+    "capacity": 42,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-131-IT",
+    "room": "131 IT Suite",
+    "building": "B Block",
+    "campus": "Manchester",
+    "type": "IT Suite",
+    "capacity": 30,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-140-SR",
+    "room": "140 Seminar Room",
+    "building": "C Block",
+    "campus": "Manchester",
+    "type": "Seminar Room",
+    "capacity": 26,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-141-SR",
+    "room": "141 Seminar Room",
+    "building": "C Block",
+    "campus": "Manchester",
+    "type": "Seminar Room",
+    "capacity": 34,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-150-MC",
+    "room": "150 Moot Court",
+    "building": "C Block",
+    "campus": "Manchester",
+    "type": "Moot Court",
+    "capacity": 36,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-160-HY",
+    "room": "160 Hybrid Room",
+    "building": "D Block",
+    "campus": "Manchester",
+    "type": "Hybrid",
+    "capacity": 64,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-170-AUD",
+    "room": "170 Auditorium",
+    "building": "D Block",
+    "campus": "Manchester",
+    "type": "Auditorium",
+    "capacity": 160,
+    "status": "Available"
+  },
+  {
+    "id": "BHM-280-WS",
+    "room": "280 Large Workshop",
+    "building": "D Block",
+    "campus": "Birmingham",
+    "type": "Workshop room",
+    "capacity": 60,
+    "status": "Available"
+  },
+  {
+    "id": "MAN-180-WS",
+    "room": "180 Large Workshop",
+    "building": "D Block",
+    "campus": "Manchester",
+    "type": "Workshop room",
+    "capacity": 60,
+    "status": "Available"
+  }
 ];
 
 export const sessions: Session[] = [
-  { id: "s1", day: "Monday", start: "09:00", end: "10:30", moduleCode: "BUS401", moduleName: "Strategic Management", lecturer: "Dr. Ahmed Khan", room: "A101 Lecture Hall", campus: "Main Campus", group: "MBA-Jan-2026", course: "MBA", capacity: 120, enrolled: 96 },
-  { id: "s2", day: "Monday", start: "11:00", end: "12:30", moduleCode: "CS301", moduleName: "Software Engineering", lecturer: "Dr. Priya Sharma", room: "C305 Computer Lab", campus: "City Campus", group: "BScCS-Year3", course: "BSc Computer Science", capacity: 60, enrolled: 58 },
-  { id: "s3", day: "Tuesday", start: "11:00", end: "12:30", moduleCode: "INT502", moduleName: "Global Business", lecturer: "Prof. James Wilson", room: "B204 Seminar Room", campus: "Business School", group: "MScIB-Sep-2026", course: "MSc International Business", capacity: 45, enrolled: 52, conflict: "Capacity mismatch" },
-  { id: "s4", day: "Tuesday", start: "11:00", end: "12:30", moduleCode: "BUS515", moduleName: "Leadership in Practice", lecturer: "Dr. Ahmed Khan", room: "B204 Seminar Room", campus: "Business School", group: "MBA-Jan-2026", course: "MBA", capacity: 45, enrolled: 39, conflict: "Room double booking" },
-  { id: "s5", day: "Wednesday", start: "14:00", end: "15:30", moduleCode: "DA501", moduleName: "Data Visualisation", lecturer: "Dr. Sarah Thomas", room: "C305 Computer Lab", campus: "City Campus", group: "MScDA-May-2026", course: "MSc Data Analytics", capacity: 60, enrolled: 43 },
-  { id: "s6", day: "Thursday", start: "15:00", end: "16:30", moduleCode: "INT610", moduleName: "International Market Entry", lecturer: "Prof. James Wilson", room: "B310 Executive Suite", campus: "Business School", group: "MScIB-Sep-2026", course: "MSc International Business", capacity: 80, enrolled: 52 }
+  {
+    "id": "S001",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-CON-26-011",
+    "moduleName": "Contract Law",
+    "lecturer": "BARNES, Matthew",
+    "room": "201 Workshop",
+    "campus": "Birmingham",
+    "group": "MA Law Sep 2026",
+    "course": "PGDL",
+    "capacity": 32,
+    "enrolled": 32
+  },
+  {
+    "id": "S002",
+    "day": "Wednesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-CON-26-011",
+    "moduleName": "Contract Law",
+    "lecturer": "BARNES, Matthew",
+    "room": "201 Workshop",
+    "campus": "Birmingham",
+    "group": "MA Law Sep 2026",
+    "course": "PGDL",
+    "capacity": 32,
+    "enrolled": 32
+  },
+  {
+    "id": "S003",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-TORT-26-012",
+    "moduleName": "Law of Tort",
+    "lecturer": "CHEN, Amelia",
+    "room": "201 Workshop",
+    "campus": "Birmingham",
+    "group": "MA Law Sep 2026",
+    "course": "PGDL",
+    "capacity": 32,
+    "enrolled": 32
+  },
+  {
+    "id": "S004",
+    "day": "Monday",
+    "start": "11:00",
+    "end": "13:00",
+    "moduleCode": "BHM-CRI-26-013",
+    "moduleName": "Criminal Law",
+    "lecturer": "EVANS, Sophie",
+    "room": "109 Large Group",
+    "campus": "Birmingham",
+    "group": "MA Law Sep 2026",
+    "course": "PGDL",
+    "capacity": 40,
+    "enrolled": 32
+  },
+  {
+    "id": "S005",
+    "day": "Tuesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-CIV-SEP-01(1)",
+    "moduleName": "Civil Litigation",
+    "lecturer": "BUTLER, Holly",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "BPC Sep 2026",
+    "course": "BPC",
+    "capacity": 60,
+    "enrolled": 41
+  },
+  {
+    "id": "S006",
+    "day": "Thursday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-CIV-SEP-01(1)",
+    "moduleName": "Civil Litigation",
+    "lecturer": "BUTLER, Holly",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "BPC Sep 2026",
+    "course": "BPC",
+    "capacity": 60,
+    "enrolled": 41
+  },
+  {
+    "id": "S007",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-CRIADV-26-022",
+    "moduleName": "Criminal Advocacy",
+    "lecturer": "DAVIES, Oliver",
+    "room": "150 Moot Court",
+    "campus": "Manchester",
+    "group": "BPC Sep 2026",
+    "course": "BPC",
+    "capacity": 36,
+    "enrolled": 41,
+    "conflict": "Capacity mismatch"
+  },
+  {
+    "id": "S008",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "MAN-ETH-26-023",
+    "moduleName": "Professional Ethics",
+    "lecturer": "FOSTER, Daniel",
+    "room": "109 Large Group",
+    "campus": "Manchester",
+    "group": "BPC Sep 2026",
+    "course": "BPC",
+    "capacity": 48,
+    "enrolled": 41
+  },
+  {
+    "id": "S009",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-CON-26-031",
+    "moduleName": "Contract Law",
+    "lecturer": "GREEN, Rebecca",
+    "room": "280 Large Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham PGDL Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 48
+  },
+  {
+    "id": "S010",
+    "day": "Wednesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-CON-26-031",
+    "moduleName": "Contract Law",
+    "lecturer": "GREEN, Rebecca",
+    "room": "280 Large Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham PGDL Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 48
+  },
+  {
+    "id": "S011",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-TORT-26-032",
+    "moduleName": "Law of Tort",
+    "lecturer": "JONES, Aisha",
+    "room": "280 Large Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham PGDL Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 48
+  },
+  {
+    "id": "S012",
+    "day": "Monday",
+    "start": "11:00",
+    "end": "13:00",
+    "moduleCode": "BHM-CRI-26-033",
+    "moduleName": "Criminal Law",
+    "lecturer": "LEWIS, Grace",
+    "room": "210 Large Group",
+    "campus": "Birmingham",
+    "group": "Birmingham PGDL Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 72,
+    "enrolled": 48
+  },
+  {
+    "id": "S013",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-CON-26-041",
+    "moduleName": "Contract Law",
+    "lecturer": "PATEL, Nisha",
+    "room": "280 Large Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham PGDL Sep 2026 B",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 44
+  },
+  {
+    "id": "S014",
+    "day": "Thursday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-CON-26-041",
+    "moduleName": "Contract Law",
+    "lecturer": "PATEL, Nisha",
+    "room": "280 Large Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham PGDL Sep 2026 B",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 44
+  },
+  {
+    "id": "S015",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-TORT-26-042",
+    "moduleName": "Law of Tort",
+    "lecturer": "SHAW, Emily",
+    "room": "280 Large Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham PGDL Sep 2026 B",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 44
+  },
+  {
+    "id": "S016",
+    "day": "Tuesday",
+    "start": "11:00",
+    "end": "13:00",
+    "moduleCode": "BHM-CRI-26-043",
+    "moduleName": "Criminal Law",
+    "lecturer": "BARNES, Matthew",
+    "room": "210 Large Group",
+    "campus": "Birmingham",
+    "group": "Birmingham PGDL Sep 2026 B",
+    "course": "PGDL",
+    "capacity": 72,
+    "enrolled": 44
+  },
+  {
+    "id": "S017",
+    "day": "Tuesday",
+    "start": "17:00",
+    "end": "19:00",
+    "moduleCode": "BHM-BUL-SEP-01(1)",
+    "moduleName": "Business Law and Practice",
+    "lecturer": "CHEN, Amelia",
+    "room": "280 Large Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "capacity": 60,
+    "enrolled": 54
+  },
+  {
+    "id": "S018",
+    "day": "Wednesday",
+    "start": "17:00",
+    "end": "19:00",
+    "moduleCode": "BHM-BUL-SEP-01(1)",
+    "moduleName": "Business Law and Practice",
+    "lecturer": "CHEN, Amelia",
+    "room": "280 Large Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "capacity": 60,
+    "enrolled": 54
+  },
+  {
+    "id": "S019",
+    "day": "Monday",
+    "start": "11:00",
+    "end": "13:00",
+    "moduleCode": "BHM-FLK-26-052",
+    "moduleName": "Functioning Legal Knowledge",
+    "lecturer": "EVANS, Sophie",
+    "room": "210 Large Group",
+    "campus": "Birmingham",
+    "group": "Birmingham SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "capacity": 72,
+    "enrolled": 54
+  },
+  {
+    "id": "S020",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-SOL-26-053",
+    "moduleName": "Solicitors Accounts",
+    "lecturer": "GREEN, Rebecca",
+    "room": "230 IT Suite",
+    "campus": "Birmingham",
+    "group": "Birmingham SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "capacity": 40,
+    "enrolled": 54,
+    "conflict": "Capacity mismatch"
+  },
+  {
+    "id": "S021",
+    "day": "Tuesday",
+    "start": "17:00",
+    "end": "19:00",
+    "moduleCode": "BHM-BUL-26-061",
+    "moduleName": "Business Law and Practice",
+    "lecturer": "JONES, Aisha",
+    "room": "202 Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "capacity": 36,
+    "enrolled": 34
+  },
+  {
+    "id": "S022",
+    "day": "Thursday",
+    "start": "17:00",
+    "end": "19:00",
+    "moduleCode": "BHM-BUL-26-061",
+    "moduleName": "Business Law and Practice",
+    "lecturer": "JONES, Aisha",
+    "room": "202 Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "capacity": 36,
+    "enrolled": 34
+  },
+  {
+    "id": "S023",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-FLK-26-062",
+    "moduleName": "Functioning Legal Knowledge",
+    "lecturer": "LEWIS, Grace",
+    "room": "109 Large Group",
+    "campus": "Birmingham",
+    "group": "Birmingham SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "capacity": 40,
+    "enrolled": 34
+  },
+  {
+    "id": "S024",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-SOL-26-063",
+    "moduleName": "Solicitors Accounts",
+    "lecturer": "PATEL, Nisha",
+    "room": "230 IT Suite",
+    "campus": "Birmingham",
+    "group": "Birmingham SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "capacity": 40,
+    "enrolled": 34
+  },
+  {
+    "id": "S025",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-CIV-26-071",
+    "moduleName": "Civil Litigation",
+    "lecturer": "SHAW, Emily",
+    "room": "202 Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham BPC Sep 2026 A",
+    "course": "BPC",
+    "capacity": 36,
+    "enrolled": 36
+  },
+  {
+    "id": "S026",
+    "day": "Wednesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-CIV-26-071",
+    "moduleName": "Civil Litigation",
+    "lecturer": "SHAW, Emily",
+    "room": "202 Workshop",
+    "campus": "Birmingham",
+    "group": "Birmingham BPC Sep 2026 A",
+    "course": "BPC",
+    "capacity": 36,
+    "enrolled": 36
+  },
+  {
+    "id": "S027",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-CRIADV-26-072",
+    "moduleName": "Criminal Advocacy",
+    "lecturer": "BARNES, Matthew",
+    "room": "250 Moot Court",
+    "campus": "Birmingham",
+    "group": "Birmingham BPC Sep 2026 A",
+    "course": "BPC",
+    "capacity": 38,
+    "enrolled": 36
+  },
+  {
+    "id": "S028",
+    "day": "Monday",
+    "start": "11:00",
+    "end": "13:00",
+    "moduleCode": "BHM-ETH-26-073",
+    "moduleName": "Professional Ethics",
+    "lecturer": "CHEN, Amelia",
+    "room": "109 Large Group",
+    "campus": "Birmingham",
+    "group": "Birmingham BPC Sep 2026 A",
+    "course": "BPC",
+    "capacity": 40,
+    "enrolled": 36
+  },
+  {
+    "id": "S029",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-INTLAW-26-081",
+    "moduleName": "International Commercial Law",
+    "lecturer": "EVANS, Sophie",
+    "room": "241 Seminar Room",
+    "campus": "Birmingham",
+    "group": "Birmingham LLM International Law Sep 2026",
+    "course": "LLM",
+    "capacity": 30,
+    "enrolled": 28
+  },
+  {
+    "id": "S030",
+    "day": "Thursday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-INTLAW-26-081",
+    "moduleName": "International Commercial Law",
+    "lecturer": "EVANS, Sophie",
+    "room": "241 Seminar Room",
+    "campus": "Birmingham",
+    "group": "Birmingham LLM International Law Sep 2026",
+    "course": "LLM",
+    "capacity": 30,
+    "enrolled": 28
+  },
+  {
+    "id": "S031",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-RES-26-082",
+    "moduleName": "Research Methods",
+    "lecturer": "GREEN, Rebecca",
+    "room": "231 IT Suite",
+    "campus": "Birmingham",
+    "group": "Birmingham LLM International Law Sep 2026",
+    "course": "LLM",
+    "capacity": 28,
+    "enrolled": 28
+  },
+  {
+    "id": "S032",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-ARB-26-083",
+    "moduleName": "International Arbitration",
+    "lecturer": "JONES, Aisha",
+    "room": "250 Moot Court",
+    "campus": "Birmingham",
+    "group": "Birmingham LLM International Law Sep 2026",
+    "course": "LLM",
+    "capacity": 38,
+    "enrolled": 28
+  },
+  {
+    "id": "S033",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-EQU-26-091",
+    "moduleName": "Equity and Trusts",
+    "lecturer": "LEWIS, Grace",
+    "room": "221 Lecture Theatre",
+    "campus": "Birmingham",
+    "group": "Birmingham LLB Year 2",
+    "course": "LLB",
+    "capacity": 90,
+    "enrolled": 82
+  },
+  {
+    "id": "S034",
+    "day": "Wednesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "BHM-EQU-26-091",
+    "moduleName": "Equity and Trusts",
+    "lecturer": "LEWIS, Grace",
+    "room": "221 Lecture Theatre",
+    "campus": "Birmingham",
+    "group": "Birmingham LLB Year 2",
+    "course": "LLB",
+    "capacity": 90,
+    "enrolled": 82
+  },
+  {
+    "id": "S035",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "BHM-EU-26-092",
+    "moduleName": "European Union Law",
+    "lecturer": "PATEL, Nisha",
+    "room": "210 Large Group",
+    "campus": "Birmingham",
+    "group": "Birmingham LLB Year 2",
+    "course": "LLB",
+    "capacity": 72,
+    "enrolled": 82,
+    "conflict": "Capacity mismatch"
+  },
+  {
+    "id": "S036",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-CON-26-101",
+    "moduleName": "Contract Law",
+    "lecturer": "HARRIS, Samuel",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "Manchester PGDL Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 46
+  },
+  {
+    "id": "S037",
+    "day": "Wednesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-CON-26-101",
+    "moduleName": "Contract Law",
+    "lecturer": "HARRIS, Samuel",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "Manchester PGDL Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 46
+  },
+  {
+    "id": "S038",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "MAN-TORT-26-102",
+    "moduleName": "Law of Tort",
+    "lecturer": "KELLY, Thomas",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "Manchester PGDL Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 60,
+    "enrolled": 46
+  },
+  {
+    "id": "S039",
+    "day": "Tuesday",
+    "start": "17:00",
+    "end": "19:00",
+    "moduleCode": "MAN-BUL-26-111",
+    "moduleName": "Business Law and Practice",
+    "lecturer": "MORGAN, Ethan",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "Manchester SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "capacity": 60,
+    "enrolled": 50
+  },
+  {
+    "id": "S040",
+    "day": "Thursday",
+    "start": "17:00",
+    "end": "19:00",
+    "moduleCode": "MAN-BUL-26-111",
+    "moduleName": "Business Law and Practice",
+    "lecturer": "MORGAN, Ethan",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "Manchester SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "capacity": 60,
+    "enrolled": 50
+  },
+  {
+    "id": "S041",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-FLK-26-112",
+    "moduleName": "Functioning Legal Knowledge",
+    "lecturer": "ROBERTS, Jack",
+    "room": "110 Large Group",
+    "campus": "Manchester",
+    "group": "Manchester SQE1 Sep 2026 A",
+    "course": "SQE1",
+    "capacity": 72,
+    "enrolled": 50
+  },
+  {
+    "id": "S042",
+    "day": "Tuesday",
+    "start": "17:00",
+    "end": "19:00",
+    "moduleCode": "MAN-BUL-26-121",
+    "moduleName": "Business Law and Practice",
+    "lecturer": "TAYLOR, Liam",
+    "room": "101 Workshop",
+    "campus": "Manchester",
+    "group": "Manchester SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "capacity": 30,
+    "enrolled": 30
+  },
+  {
+    "id": "S043",
+    "day": "Thursday",
+    "start": "17:00",
+    "end": "19:00",
+    "moduleCode": "MAN-BUL-26-121",
+    "moduleName": "Business Law and Practice",
+    "lecturer": "TAYLOR, Liam",
+    "room": "101 Workshop",
+    "campus": "Manchester",
+    "group": "Manchester SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "capacity": 30,
+    "enrolled": 30
+  },
+  {
+    "id": "S044",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-FLK-26-122",
+    "moduleName": "Functioning Legal Knowledge",
+    "lecturer": "BUTLER, Holly",
+    "room": "109 Large Group",
+    "campus": "Manchester",
+    "group": "Manchester SQE1 Sep 2026 Evening",
+    "course": "SQE1",
+    "capacity": 48,
+    "enrolled": 30
+  },
+  {
+    "id": "S045",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-CIV-26-131",
+    "moduleName": "Civil Litigation",
+    "lecturer": "DAVIES, Oliver",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "Manchester BPC Sep 2026 B",
+    "course": "BPC",
+    "capacity": 60,
+    "enrolled": 38
+  },
+  {
+    "id": "S046",
+    "day": "Wednesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-CIV-26-131",
+    "moduleName": "Civil Litigation",
+    "lecturer": "DAVIES, Oliver",
+    "room": "180 Large Workshop",
+    "campus": "Manchester",
+    "group": "Manchester BPC Sep 2026 B",
+    "course": "BPC",
+    "capacity": 60,
+    "enrolled": 38
+  },
+  {
+    "id": "S047",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "MAN-CRIADV-26-132",
+    "moduleName": "Criminal Advocacy",
+    "lecturer": "FOSTER, Daniel",
+    "room": "150 Moot Court",
+    "campus": "Manchester",
+    "group": "Manchester BPC Sep 2026 B",
+    "course": "BPC",
+    "capacity": 36,
+    "enrolled": 38,
+    "conflict": "Capacity mismatch"
+  },
+  {
+    "id": "S048",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "MAN-INTLAW-26-141",
+    "moduleName": "International Commercial Law",
+    "lecturer": "HARRIS, Samuel",
+    "room": "140 Seminar Room",
+    "campus": "Manchester",
+    "group": "Manchester LLM Legal Practice Sep 2026",
+    "course": "LLM",
+    "capacity": 26,
+    "enrolled": 26
+  },
+  {
+    "id": "S049",
+    "day": "Thursday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "MAN-INTLAW-26-141",
+    "moduleName": "International Commercial Law",
+    "lecturer": "HARRIS, Samuel",
+    "room": "140 Seminar Room",
+    "campus": "Manchester",
+    "group": "Manchester LLM Legal Practice Sep 2026",
+    "course": "LLM",
+    "capacity": 26,
+    "enrolled": 26
+  },
+  {
+    "id": "S050",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-RES-26-142",
+    "moduleName": "Research Methods",
+    "lecturer": "KELLY, Thomas",
+    "room": "131 IT Suite",
+    "campus": "Manchester",
+    "group": "Manchester LLM Legal Practice Sep 2026",
+    "course": "LLM",
+    "capacity": 30,
+    "enrolled": 26
+  },
+  {
+    "id": "S051",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-EQU-26-151",
+    "moduleName": "Equity and Trusts",
+    "lecturer": "MORGAN, Ethan",
+    "room": "120 Lecture Theatre",
+    "campus": "Manchester",
+    "group": "Manchester LLB Year 2",
+    "course": "LLB",
+    "capacity": 110,
+    "enrolled": 76
+  },
+  {
+    "id": "S052",
+    "day": "Wednesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-EQU-26-151",
+    "moduleName": "Equity and Trusts",
+    "lecturer": "MORGAN, Ethan",
+    "room": "120 Lecture Theatre",
+    "campus": "Manchester",
+    "group": "Manchester LLB Year 2",
+    "course": "LLB",
+    "capacity": 110,
+    "enrolled": 76
+  },
+  {
+    "id": "S053",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "MAN-EU-26-152",
+    "moduleName": "European Union Law",
+    "lecturer": "ROBERTS, Jack",
+    "room": "110 Large Group",
+    "campus": "Manchester",
+    "group": "Manchester LLB Year 2",
+    "course": "LLB",
+    "capacity": 72,
+    "enrolled": 76,
+    "conflict": "Capacity mismatch"
+  },
+  {
+    "id": "S054",
+    "day": "Monday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-CON-26-161",
+    "moduleName": "Contract Law",
+    "lecturer": "TAYLOR, Liam",
+    "room": "102 Workshop",
+    "campus": "Manchester",
+    "group": "Manchester MA Law Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 36,
+    "enrolled": 35
+  },
+  {
+    "id": "S055",
+    "day": "Wednesday",
+    "start": "09:00",
+    "end": "11:00",
+    "moduleCode": "MAN-CON-26-161",
+    "moduleName": "Contract Law",
+    "lecturer": "TAYLOR, Liam",
+    "room": "102 Workshop",
+    "campus": "Manchester",
+    "group": "Manchester MA Law Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 36,
+    "enrolled": 35
+  },
+  {
+    "id": "S056",
+    "day": "Tuesday",
+    "start": "13:00",
+    "end": "15:00",
+    "moduleCode": "MAN-TORT-26-162",
+    "moduleName": "Law of Tort",
+    "lecturer": "BUTLER, Holly",
+    "room": "102 Workshop",
+    "campus": "Manchester",
+    "group": "Manchester MA Law Sep 2026 A",
+    "course": "PGDL",
+    "capacity": 36,
+    "enrolled": 35
+  }
 ];
 
 export const conflicts: Conflict[] = [
-  { id: "c1", severity: "Critical", type: "Room double booking", module: "BUS515", lecturer: "Dr. Ahmed Khan", room: "B204 Seminar Room", time: "Tuesday 11:00", description: "B204 is assigned to two sessions at the same time.", fix: "Move BUS515 to B310 Executive Suite." },
-  { id: "c2", severity: "High", type: "Capacity mismatch", module: "INT502", lecturer: "Prof. James Wilson", room: "B204 Seminar Room", time: "Tuesday 11:00", description: "52 students enrolled but room capacity is 45.", fix: "Move INT502 to A101 Lecture Hall." },
-  { id: "c3", severity: "Medium", type: "Lecturer double booking", module: "BUS401", lecturer: "Dr. Ahmed Khan", room: "A101 Lecture Hall", time: "Thursday 15:00", description: "Lecturer has preparation block overlapping with class.", fix: "Shift class to Thursday 16:30." },
-  { id: "c4", severity: "Low", type: "Wrong room type", module: "DA501", lecturer: "Dr. Sarah Thomas", room: "B204 Seminar Room", time: "Wednesday 14:00", description: "Data Visualisation requires lab computers.", fix: "Assign C305 Computer Lab." }
+  {
+    "id": "C001",
+    "severity": "High",
+    "type": "Capacity mismatch",
+    "module": "MAN-CRIADV-26-022",
+    "lecturer": "DAVIES, Oliver",
+    "room": "150 Moot Court",
+    "time": "Monday 09:00",
+    "description": "41 students assigned to 150 Moot Court with capacity 36.",
+    "fix": "Move to a larger suitable room or split the cohort.",
+    "resolved": false
+  },
+  {
+    "id": "C002",
+    "severity": "High",
+    "type": "Capacity mismatch",
+    "module": "BHM-SOL-26-053",
+    "lecturer": "GREEN, Rebecca",
+    "room": "230 IT Suite",
+    "time": "Tuesday 13:00",
+    "description": "54 students assigned to 230 IT Suite with capacity 40.",
+    "fix": "Move to a larger suitable room or split the cohort.",
+    "resolved": false
+  },
+  {
+    "id": "C003",
+    "severity": "High",
+    "type": "Capacity mismatch",
+    "module": "BHM-EU-26-092",
+    "lecturer": "PATEL, Nisha",
+    "room": "210 Large Group",
+    "time": "Tuesday 13:00",
+    "description": "82 students assigned to 210 Large Group with capacity 72.",
+    "fix": "Move to a larger suitable room or split the cohort.",
+    "resolved": false
+  },
+  {
+    "id": "C004",
+    "severity": "High",
+    "type": "Capacity mismatch",
+    "module": "MAN-CRIADV-26-132",
+    "lecturer": "FOSTER, Daniel",
+    "room": "150 Moot Court",
+    "time": "Tuesday 13:00",
+    "description": "38 students assigned to 150 Moot Court with capacity 36.",
+    "fix": "Move to a larger suitable room or split the cohort.",
+    "resolved": false
+  },
+  {
+    "id": "C005",
+    "severity": "High",
+    "type": "Capacity mismatch",
+    "module": "MAN-EU-26-152",
+    "lecturer": "ROBERTS, Jack",
+    "room": "110 Large Group",
+    "time": "Tuesday 13:00",
+    "description": "76 students assigned to 110 Large Group with capacity 72.",
+    "fix": "Move to a larger suitable room or split the cohort.",
+    "resolved": false
+  }
 ];
 
 export const requirements: SchedulingRequirement[] = [
-  { moduleCode: "BUS401", studentGroup: "MBA-Jan-2026", preferredDays: "Mon/Wed", preferredTime: "Morning", requiredRoomType: "Lecture Hall", avoidDays: "Fri" },
-  { moduleCode: "INT502", studentGroup: "MScIB-Sep-2026", preferredDays: "Tue/Thu", preferredTime: "Afternoon", requiredRoomType: "Seminar Room", avoidDays: "Mon" },
-  { moduleCode: "CS301", studentGroup: "BScCS-Year3", preferredDays: "Mon/Wed/Fri", preferredTime: "Morning", requiredRoomType: "Computer Lab", avoidDays: "Tue" }
+  { "moduleCode": "BHM-CON-26-011", "studentGroup": "MA Law Sep 2026", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-TORT-26-012", "studentGroup": "MA Law Sep 2026", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Workshop room", "avoidDays": "Mon" },
+  { "moduleCode": "BHM-CRI-26-013", "studentGroup": "MA Law Sep 2026", "preferredDays": "Mon/Thu", "preferredTime": "Morning", "requiredRoomType": "Large Group", "avoidDays": "Wed" },
+  { "moduleCode": "BHM-CIV-SEP-01(1)", "studentGroup": "BPC Sep 2026", "preferredDays": "Tue/Thu", "preferredTime": "Morning", "requiredRoomType": "Workshop room", "avoidDays": "Mon" },
+  { "moduleCode": "MAN-CRIADV-26-022", "studentGroup": "BPC Sep 2026", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Moot Court", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-ETH-26-023", "studentGroup": "BPC Sep 2026", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Large Group", "avoidDays": "Mon" },
+  { "moduleCode": "BHM-CON-26-031", "studentGroup": "Birmingham PGDL Sep 2026 A", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-TORT-26-032", "studentGroup": "Birmingham PGDL Sep 2026 A", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Workshop room", "avoidDays": "Mon" },
+  { "moduleCode": "BHM-CRI-26-033", "studentGroup": "Birmingham PGDL Sep 2026 A", "preferredDays": "Mon/Thu", "preferredTime": "Morning", "requiredRoomType": "Large Group", "avoidDays": "Wed" },
+  { "moduleCode": "BHM-CON-26-041", "studentGroup": "Birmingham PGDL Sep 2026 B", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Workshop room", "avoidDays": "Mon" },
+  { "moduleCode": "BHM-TORT-26-042", "studentGroup": "Birmingham PGDL Sep 2026 B", "preferredDays": "Mon/Thu", "preferredTime": "Morning", "requiredRoomType": "Workshop room", "avoidDays": "Wed" },
+  { "moduleCode": "BHM-CRI-26-043", "studentGroup": "Birmingham PGDL Sep 2026 B", "preferredDays": "Tue/Wed/Thu", "preferredTime": "Evening", "requiredRoomType": "Large Group", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-BUL-SEP-01(1)", "studentGroup": "Birmingham SQE1 Sep 2026 A", "preferredDays": "Tue/Wed/Thu", "preferredTime": "Evening", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-FLK-26-052", "studentGroup": "Birmingham SQE1 Sep 2026 A", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Large Group", "avoidDays": "Mon" },
+  { "moduleCode": "BHM-SOL-26-053", "studentGroup": "Birmingham SQE1 Sep 2026 A", "preferredDays": "Mon/Thu", "preferredTime": "Morning", "requiredRoomType": "IT Suite", "avoidDays": "Wed" },
+  { "moduleCode": "BHM-BUL-26-061", "studentGroup": "Birmingham SQE1 Sep 2026 Evening", "preferredDays": "Tue/Wed/Thu", "preferredTime": "Evening", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-FLK-26-062", "studentGroup": "Birmingham SQE1 Sep 2026 Evening", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Large Group", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-SOL-26-063", "studentGroup": "Birmingham SQE1 Sep 2026 Evening", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "IT Suite", "avoidDays": "Mon" },
+  { "moduleCode": "BHM-CIV-26-071", "studentGroup": "Birmingham BPC Sep 2026 A", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-CRIADV-26-072", "studentGroup": "Birmingham BPC Sep 2026 A", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Moot Court", "avoidDays": "Mon" },
+  { "moduleCode": "BHM-ETH-26-073", "studentGroup": "Birmingham BPC Sep 2026 A", "preferredDays": "Mon/Thu", "preferredTime": "Morning", "requiredRoomType": "Large Group", "avoidDays": "Wed" },
+  { "moduleCode": "BHM-INTLAW-26-081", "studentGroup": "Birmingham LLM International Law Sep 2026", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Seminar Room", "avoidDays": "Mon" },
+  { "moduleCode": "BHM-RES-26-082", "studentGroup": "Birmingham LLM International Law Sep 2026", "preferredDays": "Mon/Thu", "preferredTime": "Morning", "requiredRoomType": "IT Suite", "avoidDays": "Wed" },
+  { "moduleCode": "BHM-ARB-26-083", "studentGroup": "Birmingham LLM International Law Sep 2026", "preferredDays": "Tue/Wed/Thu", "preferredTime": "Evening", "requiredRoomType": "Moot Court", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-EQU-26-091", "studentGroup": "Birmingham LLB Year 2", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Lecture Theatre", "avoidDays": "Fri" },
+  { "moduleCode": "BHM-EU-26-092", "studentGroup": "Birmingham LLB Year 2", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Large Group", "avoidDays": "Mon" },
+  { "moduleCode": "MAN-CON-26-101", "studentGroup": "Manchester PGDL Sep 2026 A", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-TORT-26-102", "studentGroup": "Manchester PGDL Sep 2026 A", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Workshop room", "avoidDays": "Mon" },
+  { "moduleCode": "MAN-BUL-26-111", "studentGroup": "Manchester SQE1 Sep 2026 A", "preferredDays": "Tue/Wed/Thu", "preferredTime": "Evening", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-FLK-26-112", "studentGroup": "Manchester SQE1 Sep 2026 A", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Large Group", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-BUL-26-121", "studentGroup": "Manchester SQE1 Sep 2026 Evening", "preferredDays": "Tue/Wed/Thu", "preferredTime": "Evening", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-FLK-26-122", "studentGroup": "Manchester SQE1 Sep 2026 Evening", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Large Group", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-CIV-26-131", "studentGroup": "Manchester BPC Sep 2026 B", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-CRIADV-26-132", "studentGroup": "Manchester BPC Sep 2026 B", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Moot Court", "avoidDays": "Mon" },
+  { "moduleCode": "MAN-INTLAW-26-141", "studentGroup": "Manchester LLM Legal Practice Sep 2026", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Seminar Room", "avoidDays": "Mon" },
+  { "moduleCode": "MAN-RES-26-142", "studentGroup": "Manchester LLM Legal Practice Sep 2026", "preferredDays": "Mon/Thu", "preferredTime": "Morning", "requiredRoomType": "IT Suite", "avoidDays": "Wed" },
+  { "moduleCode": "MAN-EQU-26-151", "studentGroup": "Manchester LLB Year 2", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Lecture Theatre", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-EU-26-152", "studentGroup": "Manchester LLB Year 2", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Large Group", "avoidDays": "Mon" },
+  { "moduleCode": "MAN-CON-26-161", "studentGroup": "Manchester MA Law Sep 2026 A", "preferredDays": "Mon/Wed", "preferredTime": "Morning", "requiredRoomType": "Workshop room", "avoidDays": "Fri" },
+  { "moduleCode": "MAN-TORT-26-162", "studentGroup": "Manchester MA Law Sep 2026 A", "preferredDays": "Tue/Thu", "preferredTime": "Afternoon", "requiredRoomType": "Workshop room", "avoidDays": "Mon" }
 ];
 
-export const initialData: AppData = { rooms: [], lecturers: [], studentGroups: [], modules: [], sessions: [], conflicts: [], requirements: [] };
+export const initialData: AppData = {
+  rooms,
+  lecturers,
+  studentGroups: studentGroupsData,
+  modules: modulesData,
+  sessions,
+  conflicts,
+  requirements,
+  generatedAt: "2026-08-03T14:00:00.000Z"
+};
 
 export const kpis = [
-  { label: "Total Scheduled Classes", value: "146", change: "+12%" },
-  { label: "Active Rooms", value: "42", change: "+4" },
-  { label: "Lecturer Utilisation", value: "78%", change: "+6%" },
-  { label: "Student Groups", value: "28", change: "+3" },
-  { label: "Active Conflicts", value: "7", change: "-2" },
-  { label: "Room Utilisation", value: "84%", change: "+18%" }
+  { label: "Total Scheduled Classes", value: String(sessions.length), change: "Dummy timetable" },
+  { label: "Active Rooms", value: String(rooms.filter(room => room.status !== "Maintenance").length), change: `${rooms.length} total` },
+  { label: "Lecturer Utilisation", value: `${Math.round((sessions.length * 2 / Math.max(1, lecturers.reduce((sum, lecturer) => sum + Number(lecturer.maxWeeklyHours || 0), 0))) * 100)}%`, change: "Training model" },
+  { label: "Student Groups", value: String(studentGroupsData.length), change: `${courses.length} courses` },
+  { label: "Active Conflicts", value: String(conflicts.filter(conflict => !conflict.resolved).length), change: "Needs review" },
+  { label: "Room Utilisation", value: `${Math.round((new Set(sessions.map(session => session.room)).size / Math.max(1, rooms.length)) * 100)}%`, change: "Current schedule" }
 ];
 
-export const roomUsageData = [
-  { name: "A101", usage: 84 }, { name: "B204", usage: 91 }, { name: "C305", usage: 76 }, { name: "D110", usage: 42 }, { name: "B310", usage: 68 }
-];
-export const lecturerWorkloadData = [
-  { name: "Ahmed", hours: 18 }, { name: "Priya", hours: 14 }, { name: "James", hours: 21 }, { name: "Sarah", hours: 12 }
-];
+export const roomUsageData = rooms.map(room => ({
+  name: room.room.split(" ")[0],
+  usage: Math.min(100, Math.round((sessions.filter(session => session.room === room.room).length / 5) * 100))
+}));
+
+export const lecturerWorkloadData = lecturers.map(lecturer => ({
+  name: lecturer.name.split(",")[0],
+  hours: lecturer.weeklyHours
+}));
+
 export const conflictTrendData = [
-  { week: "W1", conflicts: 15 }, { week: "W2", conflicts: 12 }, { week: "W3", conflicts: 9 }, { week: "W4", conflicts: 7 }
+  { week: "Week 1", conflicts: 18 },
+  { week: "Week 2", conflicts: 15 },
+  { week: "Week 3", conflicts: 12 },
+  { week: "Current", conflicts: conflicts.filter(conflict => !conflict.resolved).length }
 ];
+
 export const peakHoursData = [
-  { hour: "9 AM", sessions: 18 }, { hour: "11 AM", sessions: 29 }, { hour: "1 PM", sessions: 21 }, { hour: "3 PM", sessions: 26 }, { hour: "5 PM", sessions: 11 }
+  { hour: "09:00", sessions: 20 },
+  { hour: "11:00", sessions: 8 },
+  { hour: "13:00", sessions: 20 },
+  { hour: "17:00", sessions: 8 }
 ];
 
 export const aiSuggestions = [
-  "Move BUS401 to Room B204 to resolve capacity issue.",
-  "Dr. Ahmed has overlapping sessions Tuesday 11:00.",
-  "Room utilisation can improve by 18%.",
-  "Optimised timetable available for MBA-Jan-2026.",
-  "MBA-Jan has overlapping sessions in the Tuesday teaching block."
+  "Review the current capacity mismatches before publishing the timetable.",
+  "Move oversized workshop cohorts to a larger workshop or split the teaching group.",
+  "Cluster Birmingham and Manchester sessions by campus to reduce lecturer travel.",
+  "Check evening teaching against lecturer availability before final approval.",
+  "Export the generated timetable for academic team review."
 ];
