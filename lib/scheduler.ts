@@ -1,81 +1,152 @@
-import { AppData, Conflict, Session } from "@/types";
+import { AppData, Conflict, Lecturer, Session } from "@/types";
 
-const dayMap: Record<string, string> = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday" };
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const morningSlots = ["09:00", "11:00"];
-const afternoonSlots = ["13:00", "14:00", "15:00", "16:30"];
-const allSlots = ["09:00", "11:00", "13:00", "14:00", "15:00", "16:30"];
+const dayMap: Record<string, string> = {
+  mon: "Monday",
+  tue: "Tuesday",
+  wed: "Wednesday",
+  thu: "Thursday",
+  fri: "Friday",
+  sat: "Saturday",
+  sun: "Sunday"
+};
+
+const teachingDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const morningSlots = ["08:00", "09:00", "10:00", "11:00"];
+const afternoonSlots = ["12:00", "13:00", "14:00", "15:00"];
+const eveningSlots = ["16:00", "17:00", "18:00", "19:00"];
+const allSlots = [...morningSlots, ...afternoonSlots, ...eveningSlots];
 
 function addHours(start: string, hours = 2) {
-  const [h, m] = start.split(":").map(Number);
-  const endHour = h + hours;
-  return `${String(endHour).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  const [hour, minute] = start.split(":").map(Number);
+  const totalMinutes = hour * 60 + minute + Math.round(hours * 60);
+  return `${String(Math.floor(totalMinutes / 60)).padStart(2, "0")}:${String(totalMinutes % 60).padStart(2, "0")}`;
 }
 
-function expandDays(value?: string) {
-  if (!value) return days;
-  const parts = value.split(/[\/,; ]+/).filter(Boolean);
-  const expanded = parts.map(p => dayMap[p.slice(0,3)] || p).filter(d => days.includes(d));
-  return expanded.length ? expanded : days;
+function parseDays(value?: string) {
+  if (!value) return [];
+  const lower = value.toLowerCase();
+  if (/mon\s*[-–]\s*fri/.test(lower)) return [...teachingDays];
+  const parts = value.split(/[\/,;| ]+/).filter(Boolean);
+  return Array.from(new Set(parts.map(part => dayMap[part.slice(0, 3).toLowerCase()] || part).filter(day => teachingDays.includes(day))));
 }
 
-function slotSet(preferredTime?: string) {
-  const value = (preferredTime || "").toLowerCase();
-  if (value.includes("morning")) return morningSlots;
-  if (value.includes("afternoon")) return afternoonSlots;
+function preferredDays(value?: string) {
+  const parsed = parseDays(value);
+  return parsed.length ? parsed : [...teachingDays];
+}
+
+function preferredSlots(value?: string) {
+  const lower = (value || "").toLowerCase();
+  if (lower.includes("morning")) return morningSlots;
+  if (lower.includes("afternoon")) return afternoonSlots;
+  if (lower.includes("evening")) return eveningSlots;
   return allSlots;
+}
+
+function normaliseRoomType(value?: string) {
+  return (value || "").toLowerCase().replace(/room|classroom|teaching/g, "").replace(/[^a-z0-9]/g, "").trim();
+}
+
+function roomTypeMatches(roomType: string, requiredType: string) {
+  const room = normaliseRoomType(roomType);
+  const required = normaliseRoomType(requiredType);
+  return !required || room.includes(required) || required.includes(room);
+}
+
+function minutes(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return hour * 60 + minute;
+}
+
+function overlaps(startA: string, endA: string, startB: string, endB: string) {
+  return minutes(startA) < minutes(endB) && minutes(startB) < minutes(endA);
+}
+
+function sameScheduleDate(a: Session, b: Session) {
+  if (a.date && b.date) return a.date === b.date;
+  if (a.date || b.date) return a.day === b.day;
+  return a.day === b.day;
+}
+
+function lecturerAvailable(lecturer: Lecturer | undefined, day: string, start: string, end: string) {
+  if (!lecturer?.availability) return true;
+  const availability = lecturer.availability;
+  const listedDays = parseDays(availability);
+  if (listedDays.length && !listedDays.includes(day)) return false;
+
+  const timeMatch = availability.match(/(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/);
+  if (!timeMatch) return true;
+  return minutes(start) >= minutes(timeMatch[1]) && minutes(end) <= minutes(timeMatch[2]);
+}
+
+function isSlotFree(existing: Session[], candidate: Omit<Session, "id">) {
+  return !existing.some(session => {
+    if (!sameScheduleDate(session, candidate as Session)) return false;
+    if (!overlaps(session.start, session.end, candidate.start, candidate.end)) return false;
+    return session.room === candidate.room || session.lecturer === candidate.lecturer || session.group === candidate.group;
+  });
 }
 
 export function generateTimetable(input: AppData): AppData {
   const sessions: Session[] = [];
   const conflicts: Conflict[] = [];
-  const used = new Set<string>();
   let counter = 1;
 
-  for (const mod of input.modules) {
-    const requirement = input.requirements.find(r => r.moduleCode === mod.code || r.moduleCode === mod.code.toUpperCase());
-    const lecturer = input.lecturers.find(l => l.id === mod.lecturerId || l.name === mod.lecturerName || l.modules.includes(mod.code));
-    const group = input.studentGroups.find(g => g.name === (mod.studentGroup || requirement?.studentGroup) || g.course === mod.course);
-    const requiredType = requirement?.requiredRoomType || mod.roomTypeRequired || "Lecture Hall";
-    const preferredDays = expandDays(requirement?.preferredDays);
-    const avoidDays = expandDays(requirement?.avoidDays || "").filter(d => d !== "Monday" || requirement?.avoidDays);
-    const candidateDays = preferredDays.filter(d => !avoidDays.includes(d));
-    const candidateSlots = slotSet(requirement?.preferredTime);
-    const repeats = Math.max(1, Number(mod.weeklySessions || 1));
+  for (const module of input.modules) {
+    const requirement = input.requirements.find(item => item.moduleCode.toUpperCase() === module.code.toUpperCase());
+    const lecturer = input.lecturers.find(item => item.id === module.lecturerId || item.name === module.lecturerName || item.modules.includes(module.code));
+    const group = input.studentGroups.find(item => item.name === (module.studentGroup || requirement?.studentGroup))
+      || input.studentGroups.find(item => item.course === module.course);
+    const requiredType = requirement?.requiredRoomType || module.roomTypeRequired || "Lecture Hall";
+    const avoidedDays = parseDays(requirement?.avoidDays);
+    const requestedDays = preferredDays(requirement?.preferredDays).filter(day => !avoidedDays.includes(day));
+    const candidateDays = [...requestedDays, ...teachingDays.filter(day => !requestedDays.includes(day) && !avoidedDays.includes(day))];
+    const candidateSlots = preferredSlots(requirement?.preferredTime);
+    const repeats = Math.max(1, Number(module.weeklySessions || 1));
+    const duration = Math.max(0.5, Number(module.hoursPerSession || 2));
 
-    for (let i = 0; i < repeats; i++) {
-      const rooms = input.rooms
-        .filter(r => r.status !== "Maintenance")
-        .filter(r => r.type.toLowerCase().includes(requiredType.toLowerCase()) || requiredType.toLowerCase().includes(r.type.toLowerCase()))
-        .sort((a, b) => Math.abs(a.capacity - (group?.studentCount || 0)) - Math.abs(b.capacity - (group?.studentCount || 0)));
-      const suitableRooms = rooms.length ? rooms : input.rooms.filter(r => r.status !== "Maintenance");
+    for (let repeat = 0; repeat < repeats; repeat += 1) {
+      const typeMatched = input.rooms.filter(room => room.status !== "Maintenance" && roomTypeMatches(room.type, requiredType));
+      const availableRooms = (typeMatched.length ? typeMatched : input.rooms.filter(room => room.status !== "Maintenance"))
+        .sort((a, b) => {
+          const campusA = group && a.campus === group.campus ? 0 : 1;
+          const campusB = group && b.campus === group.campus ? 0 : 1;
+          if (campusA !== campusB) return campusA - campusB;
+          const capacityA = a.capacity >= (group?.studentCount || 0) ? 0 : 1;
+          const capacityB = b.capacity >= (group?.studentCount || 0) ? 0 : 1;
+          if (capacityA !== capacityB) return capacityA - capacityB;
+          return Math.abs(a.capacity - (group?.studentCount || 0)) - Math.abs(b.capacity - (group?.studentCount || 0));
+        });
 
       let placed: Session | null = null;
-      for (const day of [...candidateDays, ...days]) {
+
+      for (const day of candidateDays) {
         for (const start of candidateSlots) {
-          for (const room of suitableRooms) {
-            const keyRoom = `${day}-${start}-${room.room}`;
-            const keyLecturer = `${day}-${start}-${lecturer?.name || mod.lecturerName || "Unassigned"}`;
-            const keyGroup = `${day}-${start}-${group?.name || mod.studentGroup || "Unassigned"}`;
-            if (!used.has(keyRoom) && !used.has(keyLecturer) && !used.has(keyGroup)) {
-              placed = {
-                id: `gen-${counter++}`,
-                day,
-                start,
-                end: addHours(start, Number(mod.hoursPerSession || 2)),
-                moduleCode: mod.code,
-                moduleName: mod.name,
-                lecturer: lecturer?.name || mod.lecturerName || "Unassigned lecturer",
-                room: room.room,
-                campus: room.campus,
-                group: group?.name || mod.studentGroup || "Unassigned group",
-                course: mod.course,
-                capacity: room.capacity,
-                enrolled: group?.studentCount || 0
-              };
+          const end = addHours(start, duration);
+          if (!lecturerAvailable(lecturer, day, start, end)) continue;
+
+          for (const room of availableRooms) {
+            const candidate: Omit<Session, "id"> = {
+              day,
+              recurring: true,
+              start,
+              end,
+              moduleCode: module.code,
+              moduleName: module.name,
+              lecturer: lecturer?.name || module.lecturerName || "Unassigned lecturer",
+              room: room.room,
+              campus: room.campus,
+              group: group?.name || module.studentGroup || "Unassigned group",
+              course: module.course,
+              capacity: room.capacity,
+              enrolled: group?.studentCount || 0,
+              status: "Scheduled"
+            };
+
+            if (isSlotFree(sessions, candidate)) {
+              placed = { id: `gen-${counter++}`, ...candidate };
               if (placed.enrolled > placed.capacity) placed.conflict = "Capacity mismatch";
-              if (!room.type.toLowerCase().includes(requiredType.toLowerCase()) && !requiredType.toLowerCase().includes(room.type.toLowerCase())) placed.conflict = "Wrong room type";
-              used.add(keyRoom); used.add(keyLecturer); used.add(keyGroup);
+              if (!roomTypeMatches(room.type, requiredType)) placed.conflict = "Wrong room type";
               break;
             }
           }
@@ -86,54 +157,109 @@ export function generateTimetable(input: AppData): AppData {
 
       if (placed) {
         sessions.push(placed);
-        if (placed.conflict) {
-          conflicts.push({
-            id: `conf-${counter}`,
-            severity: placed.conflict === "Capacity mismatch" ? "High" : "Medium",
-            type: placed.conflict,
-            module: placed.moduleCode,
-            lecturer: placed.lecturer,
-            room: placed.room,
-            time: `${placed.day} ${placed.start}`,
-            description: placed.conflict === "Capacity mismatch" ? `${placed.enrolled} students require a larger room than ${placed.room}.` : `${placed.moduleCode} requires ${requiredType}.`,
-            fix: placed.conflict === "Capacity mismatch" ? "Assign a larger available room or split the cohort." : `Assign a ${requiredType} room.`
-          });
-        }
       } else {
         conflicts.push({
           id: `unplaced-${counter++}`,
           severity: "Critical",
           type: "Unscheduled session",
-          module: mod.code,
-          lecturer: lecturer?.name || mod.lecturerName || "Unassigned lecturer",
-          room: "No room found",
+          module: module.code,
+          lecturer: lecturer?.name || module.lecturerName || "Unassigned lecturer",
+          room: "No room assigned",
           time: "No available slot",
-          description: "The scheduler could not find a clash-free time and room using the imported constraints.",
-          fix: "Relax availability, add rooms, or reduce constraints and re-run optimisation."
+          description: "No clash-free room and time could be found using the current constraints.",
+          fix: "Review lecturer availability, room capacity, room type or preferred teaching times."
         });
       }
     }
   }
 
-  return { ...input, sessions, conflicts, generatedAt: new Date().toISOString() };
+  const generated = { ...input, sessions, conflicts, generatedAt: new Date().toISOString() };
+  return { ...generated, conflicts: detectConflicts(generated) };
 }
 
 export function detectConflicts(data: AppData): Conflict[] {
-  const conflicts: Conflict[] = [...data.conflicts.filter(c => c.type === "Unscheduled session")];
-  const roomMap = new Map<string, Session[]>();
-  const lecturerMap = new Map<string, Session[]>();
-  const groupMap = new Map<string, Session[]>();
-  for (const s of data.sessions) {
-    const keys = [
-      [roomMap, `${s.day}-${s.start}-${s.room}`],
-      [lecturerMap, `${s.day}-${s.start}-${s.lecturer}`],
-      [groupMap, `${s.day}-${s.start}-${s.group}`]
-    ] as const;
-    keys.forEach(([map, key]) => map.set(key, [...(map.get(key) || []), s]));
-    if (s.enrolled > s.capacity) conflicts.push({ id: `cap-${s.id}`, severity: "High", type: "Capacity mismatch", module: s.moduleCode, lecturer: s.lecturer, room: s.room, time: `${s.day} ${s.start}`, description: `${s.enrolled} students are assigned to a room with capacity ${s.capacity}.`, fix: "Move to a larger room or split the cohort." });
+  const conflicts: Conflict[] = data.conflicts.filter(conflict => conflict.type === "Unscheduled session");
+  const activeSessions = data.sessions.filter(session => session.status !== "Cancelled");
+
+  for (const session of activeSessions) {
+    if (session.enrolled > session.capacity) {
+      conflicts.push({
+        id: `cap-${session.id}`,
+        severity: "High",
+        type: "Capacity mismatch",
+        module: session.moduleCode,
+        lecturer: session.lecturer,
+        room: session.room,
+        time: sessionLabel(session),
+        description: `${session.enrolled} students are assigned to a room with capacity ${session.capacity}.`,
+        fix: "Move the session to a larger suitable room or split the student group."
+      });
+    }
   }
-  roomMap.forEach(items => { if (items.length > 1) conflicts.push({ id: `room-${items[0].id}`, severity: "Critical", type: "Room double booking", module: items.map(i => i.moduleCode).join(" / "), lecturer: items.map(i => i.lecturer).join(" / "), room: items[0].room, time: `${items[0].day} ${items[0].start}`, description: "Multiple sessions are using the same room and time.", fix: "Move one session to another room or time." }); });
-  lecturerMap.forEach(items => { if (items.length > 1) conflicts.push({ id: `lec-${items[0].id}`, severity: "Critical", type: "Lecturer double booking", module: items.map(i => i.moduleCode).join(" / "), lecturer: items[0].lecturer, room: items.map(i => i.room).join(" / "), time: `${items[0].day} ${items[0].start}`, description: "The same lecturer has overlapping sessions.", fix: "Move one class to a free teaching block." }); });
-  groupMap.forEach(items => { if (items.length > 1) conflicts.push({ id: `grp-${items[0].id}`, severity: "High", type: "Student group clash", module: items.map(i => i.moduleCode).join(" / "), lecturer: items.map(i => i.lecturer).join(" / "), room: items.map(i => i.room).join(" / "), time: `${items[0].day} ${items[0].start}`, description: "The same cohort has two sessions at the same time.", fix: "Move one module to another slot." }); });
-  return conflicts;
+
+  for (let firstIndex = 0; firstIndex < activeSessions.length; firstIndex += 1) {
+    for (let secondIndex = firstIndex + 1; secondIndex < activeSessions.length; secondIndex += 1) {
+      const first = activeSessions[firstIndex];
+      const second = activeSessions[secondIndex];
+      if (!sameScheduleDate(first, second) || !overlaps(first.start, first.end, second.start, second.end)) continue;
+
+      if (first.room === second.room) {
+        conflicts.push({
+          id: `room-${first.id}-${second.id}`,
+          severity: "Critical",
+          type: "Room double booking",
+          module: `${first.moduleCode} / ${second.moduleCode}`,
+          lecturer: `${first.lecturer} / ${second.lecturer}`,
+          room: first.room,
+          time: overlapLabel(first, second),
+          description: "Two sessions overlap in the same room.",
+          fix: "Move one session to another available room or time."
+        });
+      }
+
+      if (first.lecturer === second.lecturer) {
+        conflicts.push({
+          id: `lecturer-${first.id}-${second.id}`,
+          severity: "Critical",
+          type: "Lecturer double booking",
+          module: `${first.moduleCode} / ${second.moduleCode}`,
+          lecturer: first.lecturer,
+          room: `${first.room} / ${second.room}`,
+          time: overlapLabel(first, second),
+          description: "The same lecturer is assigned to overlapping sessions.",
+          fix: "Move one session to another teaching block or assign another lecturer."
+        });
+      }
+
+      if (first.group === second.group) {
+        conflicts.push({
+          id: `group-${first.id}-${second.id}`,
+          severity: "High",
+          type: "Student group clash",
+          module: `${first.moduleCode} / ${second.moduleCode}`,
+          lecturer: `${first.lecturer} / ${second.lecturer}`,
+          room: `${first.room} / ${second.room}`,
+          time: overlapLabel(first, second),
+          description: "The same student group is assigned to overlapping sessions.",
+          fix: "Move one session to another available teaching block."
+        });
+      }
+    }
+  }
+
+  return deduplicate(conflicts);
+}
+
+function sessionLabel(session: Session) {
+  return `${session.date || session.day} ${session.start}–${session.end}`;
+}
+
+function overlapLabel(first: Session, second: Session) {
+  return `${first.date || first.day} ${first.start}–${first.end} / ${second.start}–${second.end}`;
+}
+
+function deduplicate(conflicts: Conflict[]) {
+  const map = new Map<string, Conflict>();
+  conflicts.forEach(conflict => map.set(conflict.id || `${conflict.type}-${conflict.module}-${conflict.time}`, conflict));
+  return Array.from(map.values());
 }
