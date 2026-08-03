@@ -44,6 +44,8 @@ export type Module = {
 export type Session = {
   id: string;
   day: string;
+  date?: string;
+  recurring?: boolean;
   start: string;
   end: string;
   moduleCode: string;
@@ -56,6 +58,7 @@ export type Session = {
   capacity: number;
   enrolled: number;
   conflict?: string;
+  status?: "Scheduled" | "Cancelled" | "Draft" | string;
 };
 
 export type Conflict = {
