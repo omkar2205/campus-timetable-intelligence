@@ -1,4 +1,5 @@
 import type { AppData } from "@/types";
+import type { SuggestionInput } from "@/types/workflow";
 
 export type RuntimeConfig = {
   backendEnabled: boolean;
@@ -41,12 +42,25 @@ export async function loadRemoteData(config: RuntimeConfig): Promise<AppData | n
 
 export async function saveRemoteData(config: RuntimeConfig, data: AppData): Promise<void> {
   if (!config.backendEnabled || !config.appsScriptUrl) return;
-  await post(config.appsScriptUrl, { action: "saveAll", data, user: "GitHub Pages Demo" });
+  await post(config.appsScriptUrl, { action: "saveAll", data, user: "Timetable platform" });
 }
 
 export async function clearRemoteData(config: RuntimeConfig): Promise<void> {
   if (!config.backendEnabled || !config.appsScriptUrl) return;
-  await post(config.appsScriptUrl, { action: "clearAll", user: "GitHub Pages Demo" });
+  await post(config.appsScriptUrl, { action: "clearAll", user: "Timetable platform" });
+}
+
+export async function submitSuggestion(config: RuntimeConfig, suggestion: SuggestionInput) {
+  if (!config.backendEnabled || !config.appsScriptUrl) throw new Error("The feedback service is not connected.");
+  const payload = await post(config.appsScriptUrl, {
+    action: "submitSuggestion",
+    suggestion: {
+      ...suggestion,
+      submittedAt: new Date().toISOString(),
+      source: "GitHub Pages pilot"
+    }
+  });
+  return payload?.data as { suggestionId: string; submittedAt: string };
 }
 
 export async function askGemini(
