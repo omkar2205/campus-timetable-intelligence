@@ -3,6 +3,7 @@ name: Bootstrap project
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
