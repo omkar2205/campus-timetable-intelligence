@@ -1,6 +1,6 @@
 {
-  "backendEnabled": false,
-  "appsScriptUrl": "",
-  "geminiEnabled": false,
-  "dataMode": "training"
+  "backendEnabled": true,
+  "appsScriptUrl": "https://script.google.com/macros/s/AKfycbwgrqeoKZFiVocJ1me4trBhsZMAzo0Tun7w19kJ7VzI45roaXIl-QcuR2mNISmTzY3d/exec",
+  "geminiEnabled": true,
+  "dataMode": "shared"
 }
