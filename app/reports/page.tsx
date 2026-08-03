@@ -2,11 +2,14 @@
 
 import { AppShell } from "@/components/app-shell";
 import { useCampusData } from "@/components/data-context";
+import { useWorkflow } from "@/components/workflow-context";
 import { conflictReportRows, downloadCsv, downloadJson, lecturerReportRows, roomReportRows, timetableRows } from "@/lib/export";
-import { AlertTriangle, BookOpen, Building2, CalendarDays, Database, Download, GraduationCap, UserRoundCog } from "lucide-react";
+import { formatWeekPattern } from "@/lib/workflow";
+import { AlertTriangle, BookOpen, Building2, CalendarClock, CalendarDays, ClipboardList, Database, Download, GraduationCap, UserRoundCog } from "lucide-react";
 
 export default function ReportsPage() {
   const { data } = useCampusData();
+  const { templates, exceptions, publication } = useWorkflow();
 
   const reports = [
     {
@@ -15,6 +18,52 @@ export default function ReportsPage() {
       icon: CalendarDays,
       count: data.sessions.length,
       action: () => downloadCsv("complete-timetable.csv", timetableRows(data.sessions))
+    },
+    {
+      title: "Activity templates",
+      description: "Guide-aligned teaching requirements, teaching weeks, planned sizes and resource suitabilities.",
+      icon: ClipboardList,
+      count: templates.length,
+      action: () => downloadCsv("activity-templates.csv", templates.map(template => ({
+        TemplateID: template.id,
+        TemplateName: template.name,
+        Campus: template.campus,
+        Programme: template.programme,
+        ModuleCode: template.moduleCode,
+        ModuleName: template.moduleName,
+        ActivityType: template.activityType,
+        PlannedSize: template.plannedSize,
+        DurationHours: template.durationHours,
+        WeeklySessions: template.weeklySessions,
+        TeachingWeeks: formatWeekPattern(template.teachingWeeks),
+        StudentGroup: template.studentGroup,
+        LecturerSuitability: template.lecturerSuitability,
+        RoomSuitability: template.roomSuitability,
+        PreferredDays: template.preferredDays,
+        PreferredTime: template.preferredTime,
+        PublicationRule: template.publicationRule,
+        Status: template.status
+      })))
+    },
+    {
+      title: "Availability exceptions",
+      description: "Date-specific lecturer, room and student-group availability adjustments.",
+      icon: CalendarClock,
+      count: exceptions.length,
+      action: () => downloadCsv("availability-exceptions.csv", exceptions.map(exception => ({
+        ExceptionID: exception.id,
+        ResourceType: exception.resourceType,
+        ResourceID: exception.resourceId,
+        ResourceName: exception.resourceName,
+        StartDate: exception.startDate,
+        EndDate: exception.endDate,
+        StartTime: exception.startTime,
+        EndTime: exception.endTime,
+        AvailabilityType: exception.availabilityType,
+        Reason: exception.reason,
+        Notes: exception.notes,
+        CreatedAt: exception.createdAt
+      })))
     },
     {
       title: "Room utilisation",
@@ -32,34 +81,17 @@ export default function ReportsPage() {
     },
     {
       title: "Student groups",
-      description: "Cohort, course, campus and student-count reference report.",
+      description: "Cohort, programme, campus and student-count reference report.",
       icon: GraduationCap,
       count: data.studentGroups.length,
-      action: () => downloadCsv("student-groups.csv", data.studentGroups.map(group => ({
-        GroupID: group.id || "",
-        StudentGroup: group.name,
-        Course: group.course,
-        StudentCount: group.studentCount,
-        Campus: group.campus,
-        ScheduledSessions: data.sessions.filter(session => session.group === group.name).length
-      })))
+      action: () => downloadCsv("student-groups.csv", data.studentGroups.map(group => ({ GroupID: group.id || "", StudentGroup: group.name, Programme: group.course, StudentCount: group.studentCount, Campus: group.campus, ScheduledSessions: data.sessions.filter(session => session.group === group.name).length })))
     },
     {
       title: "Modules",
       description: "Module ownership, teaching demand, room requirements and assigned groups.",
       icon: BookOpen,
       count: data.modules.length,
-      action: () => downloadCsv("modules.csv", data.modules.map(module => ({
-        ModuleID: module.id || "",
-        ModuleCode: module.code,
-        ModuleName: module.name,
-        Course: module.course,
-        Lecturer: module.lecturerName || data.lecturers.find(lecturer => lecturer.id === module.lecturerId)?.name || "",
-        StudentGroup: module.studentGroup || "",
-        WeeklySessions: module.weeklySessions || 0,
-        HoursPerSession: module.hoursPerSession || 0,
-        RoomTypeRequired: module.roomTypeRequired || ""
-      })))
+      action: () => downloadCsv("modules.csv", data.modules.map(module => ({ ModuleID: module.id || "", ModuleCode: module.code, ModuleName: module.name, Programme: module.course, Lecturer: module.lecturerName || data.lecturers.find(lecturer => lecturer.id === module.lecturerId)?.name || "", StudentGroup: module.studentGroup || "", WeeklySessions: module.weeklySessions || 0, HoursPerSession: module.hoursPerSession || 0, RoomTypeRequired: module.roomTypeRequired || "" })))
     },
     {
       title: "Conflict register",
@@ -70,37 +102,16 @@ export default function ReportsPage() {
     }
   ];
 
-  return <AppShell title="Reports" subtitle="Export timetable, utilisation, workload and reference data">
+  return <AppShell title="Reports" subtitle="Export planning, scheduling, utilisation and review data">
     <div className="mb-6 enterprise-card p-5">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h3 className="font-bold text-navy">Data snapshot</h3>
-          <p className="mt-1 text-sm text-slate-500">Exports use the current shared timetable data and include changes made in the platform.</p>
-        </div>
-        <button onClick={() => downloadJson("campus-timetable-data.json", data)} className="btn-primary"><Database size={16}/>Export full data</button>
-      </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Sessions" value={data.sessions.length}/>
-        <Metric label="Rooms" value={data.rooms.length}/>
-        <Metric label="Lecturers" value={data.lecturers.length}/>
-        <Metric label="Open conflicts" value={data.conflicts.filter(conflict => !conflict.resolved).length}/>
-      </div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><h3 className="font-bold text-navy">Current data snapshot</h3><p className="mt-1 text-sm text-slate-500">Exports use the current timetable, activity-planning and availability state, including changes made during pilot testing.</p></div><button onClick={() => downloadJson("campus-timetable-data.json", { timetable: data, activityTemplates: templates, availabilityExceptions: exceptions, publication })} className="btn-primary"><Database size={16}/>Export full data</button></div>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5"><Metric label="Sessions" value={data.sessions.length}/><Metric label="Templates" value={templates.length}/><Metric label="Exceptions" value={exceptions.length}/><Metric label="Rooms" value={data.rooms.length}/><Metric label="Open conflicts" value={data.conflicts.filter(conflict => !conflict.resolved).length}/></div>
     </div>
 
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-      {reports.map(report => {
-        const Icon = report.icon;
-        return <div key={report.title} className="enterprise-card flex flex-col p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-teal-50 text-teal-700"><Icon size={20}/></div>
-            <span className="badge bg-slate-100 text-slate-600">{report.count} records</span>
-          </div>
-          <h3 className="mt-4 font-bold text-navy">{report.title}</h3>
-          <p className="mt-2 flex-1 text-sm leading-6 text-slate-500">{report.description}</p>
-          <button onClick={report.action} className="btn-secondary mt-5 w-full"><Download size={16}/>Download CSV</button>
-        </div>;
-      })}
-    </div>
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">{reports.map(report => {
+      const Icon = report.icon;
+      return <div key={report.title} className="enterprise-card flex flex-col p-5"><div className="flex items-start justify-between gap-3"><div className="grid h-11 w-11 place-items-center rounded-2xl bg-teal-50 text-teal-700"><Icon size={20}/></div><span className="badge bg-slate-100 text-slate-600">{report.count} records</span></div><h3 className="mt-4 font-bold text-navy">{report.title}</h3><p className="mt-2 flex-1 text-sm leading-6 text-slate-500">{report.description}</p><button onClick={report.action} className="btn-secondary mt-5 w-full"><Download size={16}/>Download CSV</button></div>;
+    })}</div>
   </AppShell>;
 }
 
