@@ -5,15 +5,14 @@ import { initialData } from "@/data/mock";
 import { AppData, Lecturer, Module, Room, SchedulingRequirement, Session, StudentGroup } from "@/types";
 import { detectConflicts, generateTimetable } from "@/lib/scheduler";
 import {
-  clearRemoteData,
   getRuntimeConfig,
   loadRemoteData,
   RuntimeConfig,
   saveRemoteData
 } from "@/lib/backend";
 
-const STORAGE_KEY = "cti-demo-data-v3-empty-live";
-const STAGED_STORAGE_KEY = "cti-demo-staged-data-v3-empty-live";
+const STORAGE_KEY = "cti-working-demo-data-v4";
+const STAGED_STORAGE_KEY = "cti-working-demo-staged-v4";
 
 type ImportType = "rooms" | "lecturers" | "studentGroups" | "modules" | "requirements";
 type BackendStatus = "Local" | "Connecting" | "Connected" | "Syncing" | "Error";
@@ -35,6 +34,10 @@ type DataContextValue = {
 const emptyData = (): AppData => ({ rooms: [], lecturers: [], studentGroups: [], modules: [], sessions: [], conflicts: [], requirements: [] });
 const defaultBackendConfig: RuntimeConfig = { backendEnabled: false, appsScriptUrl: "", geminiEnabled: false, dataMode: "training" };
 const DataContext = createContext<DataContextValue | null>(null);
+
+function hasStagedSchedulingData(value: AppData) {
+  return value.rooms.length > 0 && value.lecturers.length > 0 && value.studentGroups.length > 0 && value.modules.length > 0;
+}
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<AppData>(initialData);
@@ -69,7 +72,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setBackendStatus("Connecting");
         try {
           const remoteData = await loadRemoteData(config);
-          if (active && remoteData) setData(remoteData);
+          if (active && remoteData && remoteData.rooms.length) setData(remoteData);
           if (active) setBackendStatus("Connected");
         } catch (error) {
           console.error("Backend load failed; continuing with browser storage.", error);
@@ -111,34 +114,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     backendConfig,
     backendStatus,
     resetData: () => {
-      const empty = emptyData();
-      setData(empty);
-      setStagedData(empty);
+      const restored = structuredClone(initialData);
+      setData(restored);
+      setStagedData(emptyData());
       try {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(STAGED_STORAGE_KEY);
       } catch {}
-      if (backendConfig.backendEnabled && backendConfig.appsScriptUrl) {
-        setBackendStatus("Syncing");
-        void clearRemoteData(backendConfig)
-          .then(() => setBackendStatus("Connected"))
-          .catch(() => setBackendStatus("Error"));
-      }
+      persistLiveData(restored);
     },
     importRows: (type, rows) => setStagedData(current => ({ ...current, ...mapImport(type, rows), sessions: [], conflicts: [], generatedAt: undefined })),
     generateSchedule: () => {
-      const next = generateTimetable(stagedData);
+      const source = hasStagedSchedulingData(stagedData)
+        ? stagedData
+        : { ...data, sessions: [], conflicts: [], generatedAt: undefined };
+      const next = generateTimetable(source);
       setData(next);
       persistLiveData(next);
     },
     updateSession: (id, patch) => setData(current => {
-      const sessions = current.sessions.map(s => s.id === id ? { ...s, ...patch } : s);
+      const sessions = current.sessions.map(session => session.id === id ? { ...session, ...patch } : session);
       const next = { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
       persistLiveData(next);
       return next;
     }),
     resolveConflict: (id) => setData(current => {
-      const next = { ...current, conflicts: current.conflicts.map(c => c.id === id ? { ...c, resolved: true, severity: "Low" } : c) };
+      const next = { ...current, conflicts: current.conflicts.map(conflict => conflict.id === id ? { ...conflict, resolved: true, severity: "Low" } : conflict) };
       persistLiveData(next);
       return next;
     }),
@@ -172,63 +173,67 @@ export function useCampusData() {
 
 function mapImport(type: ImportType, rows: Record<string, string>[]): Partial<AppData> {
   if (type === "rooms") {
-    const rooms: Room[] = rows.map((r, index) => ({
-      id: r.room_id || `R${index + 1}`,
-      room: r.room_name || r.room || "Unnamed Room",
-      campus: r.campus || "Main Campus",
-      building: r.building || "Main Building",
-      type: r.room_type || r.type || "Lecture Hall",
-      capacity: Number(r.capacity || 0),
-      status: r.status || "Available"
+    const rooms: Room[] = rows.map((row, index) => ({
+      id: row.room_id || `R${index + 1}`,
+      room: row.room_name || row.room || "Unnamed Room",
+      campus: row.campus || "Main Campus",
+      building: row.building || "Main Building",
+      type: row.room_type || row.type || "Lecture Hall",
+      capacity: Number(row.capacity || 0),
+      status: row.status || "Available"
     }));
     return { rooms };
   }
+
   if (type === "lecturers") {
-    const lecturers: Lecturer[] = rows.map((r, index) => ({
-      id: r.lecturer_id || `L${index + 1}`,
-      name: r.lecturer_name || r.name || "Unnamed Lecturer",
-      department: r.department || "Academic",
-      maxWeeklyHours: Number(r.max_weekly_hours || 18),
+    const lecturers: Lecturer[] = rows.map((row, index) => ({
+      id: row.lecturer_id || `L${index + 1}`,
+      name: row.lecturer_name || row.name || "Unnamed Lecturer",
+      department: row.department || "Academic",
+      maxWeeklyHours: Number(row.max_weekly_hours || 18),
       weeklyHours: 0,
-      availability: r.availability || "Mon-Fri 09:00-17:00",
-      preferredCampus: r.preferred_campus || "Main Campus",
+      availability: row.availability || "Mon-Fri 09:00-17:00",
+      preferredCampus: row.preferred_campus || "Main Campus",
       workload: "Normal",
       modules: []
     }));
     return { lecturers };
   }
+
   if (type === "studentGroups") {
-    const studentGroups: StudentGroup[] = rows.map((r, index) => ({
-      id: r.group_id || `G${index + 1}`,
-      name: r.group_name || r.name || "Unnamed Group",
-      course: r.course || "General",
-      studentCount: Number(r.student_count || r.students || 0),
-      campus: r.campus || "Main Campus"
+    const studentGroups: StudentGroup[] = rows.map((row, index) => ({
+      id: row.group_id || `G${index + 1}`,
+      name: row.group_name || row.name || "Unnamed Group",
+      course: row.course || "General",
+      studentCount: Number(row.student_count || row.students || 0),
+      campus: row.campus || "Main Campus"
     }));
     return { studentGroups };
   }
+
   if (type === "modules") {
-    const modules: Module[] = rows.map((r, index) => ({
-      id: r.module_id || `M${index + 1}`,
-      code: r.module_code || r.code || "MOD000",
-      name: r.module_name || r.name || "Unnamed Module",
-      course: r.course || "General",
-      lecturerId: r.lecturer_id || undefined,
-      lecturerName: r.lecturer_name || undefined,
-      weeklySessions: Number(r.weekly_sessions || 1),
-      hoursPerSession: Number(r.hours_per_session || 2),
-      roomTypeRequired: r.room_type_required || "Lecture Hall",
-      studentGroup: r.student_group || undefined
+    const modules: Module[] = rows.map((row, index) => ({
+      id: row.module_id || `M${index + 1}`,
+      code: row.module_code || row.code || "MOD000",
+      name: row.module_name || row.name || "Unnamed Module",
+      course: row.course || "General",
+      lecturerId: row.lecturer_id || undefined,
+      lecturerName: row.lecturer_name || undefined,
+      weeklySessions: Number(row.weekly_sessions || 1),
+      hoursPerSession: Number(row.hours_per_session || 2),
+      roomTypeRequired: row.room_type_required || "Lecture Hall",
+      studentGroup: row.student_group || undefined
     }));
     return { modules };
   }
-  const requirements: SchedulingRequirement[] = rows.map(r => ({
-    moduleCode: r.module_code || r.moduleCode || "",
-    studentGroup: r.student_group || r.studentGroup || "",
-    preferredDays: r.preferred_days || "",
-    preferredTime: r.preferred_time || "",
-    requiredRoomType: r.required_room_type || "Lecture Hall",
-    avoidDays: r.avoid_days || ""
+
+  const requirements: SchedulingRequirement[] = rows.map(row => ({
+    moduleCode: row.module_code || row.moduleCode || "",
+    studentGroup: row.student_group || row.studentGroup || "",
+    preferredDays: row.preferred_days || "",
+    preferredTime: row.preferred_time || "",
+    requiredRoomType: row.required_room_type || "Lecture Hall",
+    avoidDays: row.avoid_days || ""
   }));
   return { requirements };
 }
