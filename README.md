@@ -1,54 +1,69 @@
 # Campus Timetable Intelligence
 
-Enterprise university timetable scheduling demo built with Next.js, React, TypeScript, Tailwind CSS and Recharts.
+University timetable planning and scheduling platform built with Next.js, React, TypeScript, Tailwind CSS and Recharts.
 
-The application opens directly into a working timetable platform. It includes a full dummy/training dataset for Birmingham and Manchester so the dashboard, timetable builder, rooms, lecturers, students, conflicts and analytics can be tested immediately.
+The application opens directly into a complete pilot workspace with Birmingham and Manchester reference data. It is designed to look and behave like an operational product while remaining intentionally limited to a small number of test users and a modest dataset.
 
 ## GitHub Pages
 
-The repository includes a GitHub Actions workflow that exports the Next.js application as a static site and deploys it to:
+The repository includes a GitHub Actions workflow that statically exports the application and deploys it to:
 
 `https://omkar2205.github.io/campus-timetable-intelligence/`
 
-In the repository, open **Settings → Pages** and select **GitHub Actions** as the source if it is not already selected.
+In **Settings → Pages**, select **GitHub Actions** as the deployment source.
 
-## Included dummy dataset
+## Guide-aligned workflow
+
+The platform follows this process:
+
+1. Maintain source data for campuses, rooms, lecturers, student groups, modules and scheduling requirements.
+2. Review Activity Templates containing teaching weeks, duration, planned size, tutor suitability and room suitability.
+3. Record normal availability and date-specific exceptions.
+4. Validate the teaching requirements before scheduling.
+5. Generate, move and manually add timetable sessions.
+6. Recalculate room, lecturer, student-group and capacity conflicts.
+7. Review publication readiness and record a publication snapshot.
+8. Export operational reports.
+9. Submit pilot feedback into the shared Google Sheet.
+
+The interface deliberately remains modern and guided rather than copying the legacy Scientia Enterprise and Classic screens.
+
+## Reference data
+
+The included reference dataset contains:
 
 - 28 rooms
 - 16 lecturers
 - 16 student groups
 - 40 modules
 - 40 scheduling requirements
-- 56 generated sessions
-- Capacity conflicts for testing resolution workflows
+- 56 scheduled sessions
 - Birmingham and Manchester campuses
-- PGDL, BPC, SQE1, LLB and LLM courses
+- PGDL, BPC, SQE1, LLB and LLM programmes
 
-The dataset was expanded from the supplied room, lecturer, student-group and scheduling CSV structures. It is for training and product testing only.
+Artificial conflict records have been removed. Conflicts are created only when current timetable data produces a genuine clash or capacity issue.
 
-## Demo flow
+## Main areas
 
-1. Open the platform; no login is required.
-2. Review the Dashboard and Analytics pages.
-3. Open Timetable Builder and change a session day, time or room.
-4. Review how conflicts update.
-5. Open Data Import to upload replacement CSV files into staging.
-6. Select **Generate Timetable** to publish the staged data, or re-optimise the current dummy dataset.
-7. Select **Restore Full Demo Data** to return to the prepared working model.
-8. Export the timetable as CSV.
+- Dashboard
+- Activity Planning and pre-scheduling validation
+- Availability and date-specific exceptions
+- Data Import and staging
+- Multi-week Timetable
+- Room Booking
+- Lecturer and Student Schedule views
+- Conflict Alerts
+- Review & Publication
+- Analytics
+- Reports
+- Suggestions
+- AI Help Assistant
 
 ## Shared backend
 
-The frontend supports two modes:
+The frontend is connected to Google Apps Script and Google Sheets through `public/runtime-config.json`.
 
-- **Local mode:** the full dummy dataset is included in the site and user changes are stored in that browser.
-- **Shared mode:** Google Apps Script and Google Sheets can be enabled so all users work from the same saved dataset.
-
-Runtime mode is controlled in `public/runtime-config.json`.
-
-The Apps Script backend files are in `apps-script/`. Follow `apps-script/SETUP.md` to deploy the web app and enable shared data and Gemini assistance.
-
-The full Google Sheets reference database contains:
+The prepared spreadsheet contains:
 
 - Summary
 - Config
@@ -59,10 +74,20 @@ The full Google Sheets reference database contains:
 - Requirements
 - Sessions
 - Conflicts
+- ActivityTemplates
+- AvailabilityExceptions
+- PublicationLog
+- Suggestions
 - AuditLog
 - FAQs
 
-Do not store the Gemini API key in this repository. Keep it in Apps Script **Script Properties**.
+The Apps Script files are in `apps-script/`. Follow `apps-script/SETUP.md` whenever the backend code is updated.
+
+Gemini keys must only be stored in Apps Script **Script Properties** and must never be committed to GitHub.
+
+## Pilot limitation
+
+This is a final working model for evaluation, not a scaled production service. It has no user authentication, role-based permissions, institutional calendar delivery, high-volume optimisation or multi-tenant data separation. Use approved dummy or training data and avoid sensitive live information.
 
 ## Local development
 
@@ -79,4 +104,4 @@ Open `http://localhost:3000`.
 npm.cmd run build
 ```
 
-The static export is written to the `out` folder and includes the GitHub Pages `index.html`.
+The static export is written to `out` and includes the GitHub Pages `index.html`.
