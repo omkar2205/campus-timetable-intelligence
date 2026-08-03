@@ -2,7 +2,7 @@
 
 Enterprise university timetable scheduling demo built with Next.js, React, TypeScript, Tailwind CSS and Recharts.
 
-The application starts empty. Rooms, lecturers, student groups, modules, sessions and conflicts appear only after CSV data is staged and **Generate Timetable** is selected.
+The application opens directly into a working timetable platform. It includes a full dummy/training dataset for Birmingham and Manchester so the dashboard, timetable builder, rooms, lecturers, students, conflicts and analytics can be tested immediately.
 
 ## GitHub Pages
 
@@ -12,29 +12,45 @@ The repository includes a GitHub Actions workflow that exports the Next.js appli
 
 In the repository, open **Settings → Pages** and select **GitHub Actions** as the source if it is not already selected.
 
+## Included dummy dataset
+
+- 28 rooms
+- 16 lecturers
+- 16 student groups
+- 40 modules
+- 40 scheduling requirements
+- 56 generated sessions
+- Capacity conflicts for testing resolution workflows
+- Birmingham and Manchester campuses
+- PGDL, BPC, SQE1, LLB and LLM courses
+
+The dataset was expanded from the supplied room, lecturer, student-group and scheduling CSV structures. It is for training and product testing only.
+
 ## Demo flow
 
-1. Open the application and log in.
-2. Open **Data Import**.
-3. Upload CSV files or load sample data for rooms, lecturers, student groups, modules and scheduling requirements.
-4. Confirm the data is staged while the live application remains empty.
-5. Select **Generate Timetable**.
-6. Review the Dashboard, Timetable Builder, Rooms, Lecturers, Students, Conflicts and Analytics pages.
-7. Export the generated timetable or make manual changes.
+1. Open the platform; no login is required.
+2. Review the Dashboard and Analytics pages.
+3. Open Timetable Builder and change a session day, time or room.
+4. Review how conflicts update.
+5. Open Data Import to upload replacement CSV files into staging.
+6. Select **Generate Timetable** to publish the staged data, or re-optimise the current dummy dataset.
+7. Select **Restore Full Demo Data** to return to the prepared working model.
+8. Export the timetable as CSV.
 
 ## Shared backend
 
 The frontend supports two modes:
 
-- **Local mode:** browser storage only; enabled by default.
-- **Shared mode:** Google Apps Script and Google Sheets; allows generated data to be shared across users.
+- **Local mode:** the full dummy dataset is included in the site and user changes are stored in that browser.
+- **Shared mode:** Google Apps Script and Google Sheets can be enabled so all users work from the same saved dataset.
 
 Runtime mode is controlled in `public/runtime-config.json`.
 
 The Apps Script backend files are in `apps-script/`. Follow `apps-script/SETUP.md` to deploy the web app and enable shared data and Gemini assistance.
 
-The prepared Google Sheets database uses these tabs:
+The full Google Sheets reference database contains:
 
+- Summary
 - Config
 - Rooms
 - Lecturers
@@ -63,4 +79,4 @@ Open `http://localhost:3000`.
 npm.cmd run build
 ```
 
-The static export is written to the `out` folder.
+The static export is written to the `out` folder and includes the GitHub Pages `index.html`.
