@@ -1,44 +1,89 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { initialData } from "@/data/mock";
 import { AppData, Lecturer, Module, Room, SchedulingRequirement, Session, StudentGroup } from "@/types";
 import { detectConflicts, generateTimetable } from "@/lib/scheduler";
+import {
+  clearRemoteData,
+  getRuntimeConfig,
+  loadRemoteData,
+  RuntimeConfig,
+  saveRemoteData
+} from "@/lib/backend";
 
 const STORAGE_KEY = "cti-demo-data-v3-empty-live";
 const STAGED_STORAGE_KEY = "cti-demo-staged-data-v3-empty-live";
 
 type ImportType = "rooms" | "lecturers" | "studentGroups" | "modules" | "requirements";
+type BackendStatus = "Local" | "Connecting" | "Connected" | "Syncing" | "Error";
 
 type DataContextValue = {
   data: AppData;
   stagedData: AppData;
+  backendConfig: RuntimeConfig;
+  backendStatus: BackendStatus;
   resetData: () => void;
   importRows: (type: ImportType, rows: Record<string, string>[]) => void;
   generateSchedule: () => void;
   updateSession: (id: string, patch: Partial<Session>) => void;
   resolveConflict: (id?: string) => void;
   addManualSession: (session: Session) => void;
+  syncNow: () => Promise<void>;
 };
 
 const emptyData = (): AppData => ({ rooms: [], lecturers: [], studentGroups: [], modules: [], sessions: [], conflicts: [], requirements: [] });
+const defaultBackendConfig: RuntimeConfig = { backendEnabled: false, appsScriptUrl: "", geminiEnabled: false, dataMode: "training" };
 const DataContext = createContext<DataContextValue | null>(null);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  // `data` is the live product state shown across Dashboard, Rooms, Lecturers, Students, Conflicts and Analytics.
-  // `stagedData` is the imported input data waiting for the scheduler. This keeps the demo empty until Generate Timetable is clicked.
   const [data, setData] = useState<AppData>(initialData);
   const [stagedData, setStagedData] = useState<AppData>(emptyData());
   const [loaded, setLoaded] = useState(false);
+  const [backendConfig, setBackendConfig] = useState<RuntimeConfig>(defaultBackendConfig);
+  const [backendStatus, setBackendStatus] = useState<BackendStatus>("Local");
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const staged = localStorage.getItem(STAGED_STORAGE_KEY);
-      if (saved) setData(JSON.parse(saved));
-      if (staged) setStagedData(JSON.parse(staged));
-    } catch {}
-    setLoaded(true);
+    let active = true;
+
+    async function initialise() {
+      let localData = initialData;
+      let localStaged = emptyData();
+
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        const staged = localStorage.getItem(STAGED_STORAGE_KEY);
+        if (saved) localData = JSON.parse(saved);
+        if (staged) localStaged = JSON.parse(staged);
+      } catch {}
+
+      if (!active) return;
+      setData(localData);
+      setStagedData(localStaged);
+
+      const config = await getRuntimeConfig();
+      if (!active) return;
+      setBackendConfig(config);
+
+      if (config.backendEnabled && config.appsScriptUrl) {
+        setBackendStatus("Connecting");
+        try {
+          const remoteData = await loadRemoteData(config);
+          if (active && remoteData) setData(remoteData);
+          if (active) setBackendStatus("Connected");
+        } catch (error) {
+          console.error("Backend load failed; continuing with browser storage.", error);
+          if (active) setBackendStatus("Error");
+        }
+      } else {
+        setBackendStatus("Local");
+      }
+
+      if (active) setLoaded(true);
+    }
+
+    void initialise();
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -49,9 +94,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (loaded) localStorage.setItem(STAGED_STORAGE_KEY, JSON.stringify(stagedData));
   }, [stagedData, loaded]);
 
+  const persistLiveData = useCallback((next: AppData) => {
+    if (!backendConfig.backendEnabled || !backendConfig.appsScriptUrl) return;
+    setBackendStatus("Syncing");
+    void saveRemoteData(backendConfig, next)
+      .then(() => setBackendStatus("Connected"))
+      .catch((error) => {
+        console.error("Backend save failed; browser copy remains available.", error);
+        setBackendStatus("Error");
+      });
+  }, [backendConfig]);
+
   const value = useMemo<DataContextValue>(() => ({
     data,
     stagedData,
+    backendConfig,
+    backendStatus,
     resetData: () => {
       const empty = emptyData();
       setData(empty);
@@ -60,19 +118,48 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(STAGED_STORAGE_KEY);
       } catch {}
+      if (backendConfig.backendEnabled && backendConfig.appsScriptUrl) {
+        setBackendStatus("Syncing");
+        void clearRemoteData(backendConfig)
+          .then(() => setBackendStatus("Connected"))
+          .catch(() => setBackendStatus("Error"));
+      }
     },
     importRows: (type, rows) => setStagedData(current => ({ ...current, ...mapImport(type, rows), sessions: [], conflicts: [], generatedAt: undefined })),
-    generateSchedule: () => setData(() => generateTimetable(stagedData)),
+    generateSchedule: () => {
+      const next = generateTimetable(stagedData);
+      setData(next);
+      persistLiveData(next);
+    },
     updateSession: (id, patch) => setData(current => {
       const sessions = current.sessions.map(s => s.id === id ? { ...s, ...patch } : s);
-      return { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
+      const next = { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
+      persistLiveData(next);
+      return next;
     }),
-    resolveConflict: (id) => setData(current => ({ ...current, conflicts: current.conflicts.map(c => c.id === id ? { ...c, resolved: true, severity: "Low" } : c) })),
+    resolveConflict: (id) => setData(current => {
+      const next = { ...current, conflicts: current.conflicts.map(c => c.id === id ? { ...c, resolved: true, severity: "Low" } : c) };
+      persistLiveData(next);
+      return next;
+    }),
     addManualSession: (session) => setData(current => {
       const sessions = [...current.sessions, session];
-      return { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
-    })
-  }), [data, stagedData]);
+      const next = { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
+      persistLiveData(next);
+      return next;
+    }),
+    syncNow: async () => {
+      if (!backendConfig.backendEnabled || !backendConfig.appsScriptUrl) return;
+      setBackendStatus("Syncing");
+      try {
+        await saveRemoteData(backendConfig, data);
+        setBackendStatus("Connected");
+      } catch (error) {
+        setBackendStatus("Error");
+        throw error;
+      }
+    }
+  }), [data, stagedData, backendConfig, backendStatus, persistLiveData]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
