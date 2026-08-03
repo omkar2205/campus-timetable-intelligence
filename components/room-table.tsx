@@ -1,0 +1,12 @@
+"use client";
+import { StatusBadge } from "@/components/status-badge";
+import { useMemo, useState } from "react";
+import { useCampusData } from "@/components/data-context";
+
+export function RoomTable() {
+  const { data } = useCampusData();
+  const [query, setQuery] = useState("");
+  const [booked, setBooked] = useState<string | null>(null);
+  const list = useMemo(() => data.rooms.filter(r => r.room.toLowerCase().includes(query.toLowerCase()) || r.campus.toLowerCase().includes(query.toLowerCase()) || r.type.toLowerCase().includes(query.toLowerCase())), [query, data.rooms]);
+  return <div className="enterprise-card p-5"><div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><input className="input md:w-80" placeholder="Search rooms, building, campus..." value={query} onChange={e=>setQuery(e.target.value)}/><div className="flex gap-2"><select className="input"><option>All capacity</option><option>50+</option><option>100+</option></select><select className="input"><option>All campuses</option>{Array.from(new Set(data.rooms.map(r=>r.campus))).map(c=><option key={c}>{c}</option>)}</select></div></div><div className="overflow-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b bg-slate-50 text-xs uppercase text-slate-500"><th className="p-3">Room</th><th>Building</th><th>Campus</th><th>Type</th><th>Capacity</th><th>Status</th><th></th></tr></thead><tbody>{list.map(r=><tr key={r.room} className="border-b last:border-0"><td className="p-3 font-semibold text-navy">{r.room}</td><td>{r.building}</td><td>{r.campus}</td><td>{r.type}</td><td>{r.capacity}</td><td><StatusBadge value={r.status}/></td><td><button onClick={()=>setBooked(r.room)} className="btn-secondary">Book</button></td></tr>)}</tbody></table></div>{booked && <div className="fixed inset-0 z-50 grid place-items-center bg-navy/40 p-4"><div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-executive"><h3 className="text-xl font-bold text-navy">Book Room</h3><p className="mt-2 text-sm text-slate-600">Create a simulated booking for {booked}.</p><div className="mt-4 grid gap-3"><input className="input" placeholder="Module or event title"/><input className="input" type="date"/><input className="input" placeholder="Time block"/></div><div className="mt-5 flex justify-end gap-2"><button onClick={()=>setBooked(null)} className="btn-secondary">Cancel</button><button onClick={()=>setBooked(null)} className="btn-primary">Confirm Booking</button></div></div></div>}</div>;
+}
