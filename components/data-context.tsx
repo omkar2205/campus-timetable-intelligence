@@ -5,14 +5,15 @@ import { initialData } from "@/data/mock";
 import { AppData, Lecturer, Module, Room, SchedulingRequirement, Session, StudentGroup } from "@/types";
 import { detectConflicts, generateTimetable } from "@/lib/scheduler";
 import {
+  checkBackendReachable,
   getRuntimeConfig,
   loadRemoteData,
   RuntimeConfig,
   saveRemoteData
 } from "@/lib/backend";
 
-const STORAGE_KEY = "cti-platform-data-v5";
-const STAGED_STORAGE_KEY = "cti-platform-staged-v5";
+const STORAGE_KEY = "cti-platform-data-v6";
+const STAGED_STORAGE_KEY = "cti-platform-staged-v6";
 
 const SEEDED_CONFLICT_IDS = new Set(["C001", "C002", "C003", "C004", "C005"]);
 const SEEDED_CONFLICT_MODULES = new Set([
@@ -24,7 +25,7 @@ const SEEDED_CONFLICT_MODULES = new Set([
 ]);
 
 type ImportType = "rooms" | "lecturers" | "studentGroups" | "modules" | "requirements";
-type BackendStatus = "Local" | "Connecting" | "Connected" | "Syncing" | "Error";
+export type BackendStatus = "Local" | "Connecting" | "Connected" | "Syncing" | "Unavailable";
 
 type DataContextValue = {
   data: AppData;
@@ -99,13 +100,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           if (active && remoteData && remoteData.rooms.length) {
             const cleanedRemote = withoutSeededConflicts(remoteData);
             setData(cleanedRemote);
-            const removedSeededContent = cleanedRemote.conflicts.length !== remoteData.conflicts.length || cleanedRemote.sessions.some((session, index) => session.conflict !== remoteData.sessions[index]?.conflict);
-            if (removedSeededContent) void saveRemoteData(config, cleanedRemote).catch(error => console.error("Could not clean seeded backend conflicts.", error));
+            const removedSeededContent = cleanedRemote.conflicts.length !== remoteData.conflicts.length
+              || cleanedRemote.sessions.some((session, index) => session.conflict !== remoteData.sessions[index]?.conflict);
+            if (removedSeededContent) {
+              void saveRemoteData(config, cleanedRemote).catch(error => console.warn("Seeded conflict cleanup could not be confirmed.", error));
+            }
           }
           if (active) setBackendStatus("Connected");
         } catch (error) {
-          console.error("Backend load failed; continuing with browser storage.", error);
-          if (active) setBackendStatus("Error");
+          console.warn("Shared data could not be read directly; checking backend reachability.", error);
+          const reachable = await checkBackendReachable(config);
+          if (active) setBackendStatus(reachable ? "Connected" : "Unavailable");
         }
       } else {
         setBackendStatus("Local");
@@ -132,8 +137,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     void saveRemoteData(backendConfig, next)
       .then(() => setBackendStatus("Connected"))
       .catch((error) => {
-        console.error("Backend save failed; browser copy remains available.", error);
-        setBackendStatus("Error");
+        console.warn("Shared save was unavailable; the browser copy remains available.", error);
+        setBackendStatus("Unavailable");
       });
   }, [backendConfig]);
 
@@ -185,7 +190,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         await saveRemoteData(backendConfig, data);
         setBackendStatus("Connected");
       } catch (error) {
-        setBackendStatus("Error");
+        setBackendStatus("Unavailable");
         throw error;
       }
     }

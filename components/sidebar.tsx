@@ -20,7 +20,7 @@ import {
   UserRoundCog
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useCampusData } from "@/components/data-context";
+import { useCampusData, type BackendStatus } from "@/components/data-context";
 
 const sections = [
   {
@@ -84,9 +84,16 @@ export function Sidebar() {
         </div>)}
       </nav>
       <div className="absolute bottom-5 left-4 right-4 rounded-2xl bg-white/10 p-4 ring-1 ring-white/10 backdrop-blur">
-        <div className="mb-2 flex items-center justify-between gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><Bell size={16}/>System status</span><span className="text-xs text-teal-200">{backendStatus}</span></div>
+        <div className="mb-2 flex items-center justify-between gap-2 text-sm font-semibold"><span className="flex items-center gap-2"><Bell size={16}/>System status</span><span className="text-xs text-teal-200">{statusLabel(backendStatus)}</span></div>
         <p className="text-xs leading-5 text-slate-300">{activeConflicts ? `${activeConflicts} conflict${activeConflicts === 1 ? "" : "s"} require review.` : "No active conflicts require review."}</p>
       </div>
     </aside>
   );
+}
+
+function statusLabel(status: BackendStatus) {
+  if (status === "Connected") return "Backend online";
+  if (status === "Connecting") return "Checking";
+  if (status === "Syncing") return "Saving";
+  return "Local data";
 }
