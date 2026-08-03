@@ -1,0 +1,27 @@
+name: Bootstrap project
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    if: ${{ hashFiles('project-bootstrap.zip') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack project source
+        run: |
+          unzip -o project-bootstrap.zip
+          rm project-bootstrap.zip
+          rm -f .github/workflows/bootstrap.yml
+      - name: Commit project source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add Campus Timetable Intelligence working model"
+          git push

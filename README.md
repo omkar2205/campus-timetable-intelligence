@@ -1,1 +1,0 @@
-# campus-timetable-intelligence
