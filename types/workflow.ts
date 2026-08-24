@@ -12,6 +12,7 @@ export type ActivityTemplate = {
   durationHours: number;
   weeklySessions: number;
   teachingWeeks: number[];
+  studentIds?: string[];
   studentGroup: string;
   lecturerSuitability: string;
   roomSuitability: string;
@@ -24,7 +25,7 @@ export type ActivityTemplate = {
 
 export type AvailabilityException = {
   id: string;
-  resourceType: "Lecturer" | "Student group" | "Room";
+  resourceType: "Lecturer" | "Student" | "Student group" | "Room";
   resourceId: string;
   resourceName: string;
   startDate: string;
