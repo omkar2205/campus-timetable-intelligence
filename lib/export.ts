@@ -23,10 +23,11 @@ export function timetableRows(sessions: Session[], weekDates?: Record<string, st
     Module: session.moduleCode,
     ModuleName: session.moduleName,
     Course: session.course,
-    Lecturer: session.lecturer,
-    Room: session.room,
+    Staff: session.lecturer,
+    Location: session.room,
     Campus: session.campus,
-    StudentGroup: session.group,
+    LegacyGroup: session.group,
+    IndividualStudentIDs: (session.studentIds || []).join("|"),
     Enrolled: session.enrolled,
     Capacity: session.capacity,
     Status: session.status || "Scheduled",
@@ -36,9 +37,9 @@ export function timetableRows(sessions: Session[], weekDates?: Record<string, st
 
 export function roomReportRows(data: AppData) {
   return data.rooms.map(room => {
-    const sessions = data.sessions.filter(session => session.room === room.room);
+    const sessions = data.sessions.filter(session => session.room === room.room && session.campus === room.campus);
     return {
-      Room: room.room,
+      Location: room.room,
       Building: room.building,
       Campus: room.campus,
       Type: room.type,
@@ -55,10 +56,12 @@ export function lecturerReportRows(data: AppData) {
     const sessions = data.sessions.filter(session => session.lecturer === lecturer.name);
     const hours = sessions.reduce((total, session) => total + durationHours(session.start, session.end), 0);
     return {
-      Lecturer: lecturer.name,
+      StaffID: lecturer.id || "",
+      StaffName: lecturer.name,
       Department: lecturer.department,
+      PrimaryCampus: lecturer.primaryCampus || lecturer.preferredCampus || "",
+      AdditionalCampuses: (lecturer.additionalCampuses || []).join("|"),
       Availability: lecturer.availability,
-      PreferredCampus: lecturer.preferredCampus || "",
       ScheduledSessions: sessions.length,
       ScheduledHours: hours,
       MaximumWeeklyHours: lecturer.maxWeeklyHours || 18,
@@ -72,8 +75,8 @@ export function conflictReportRows(data: AppData) {
     Severity: conflict.severity,
     Type: conflict.type,
     Module: conflict.module,
-    Lecturer: conflict.lecturer,
-    Room: conflict.room,
+    Staff: conflict.lecturer,
+    Location: conflict.room,
     Time: conflict.time,
     Description: conflict.description,
     SuggestedFix: conflict.fix,
