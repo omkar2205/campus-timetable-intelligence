@@ -1,5 +1,5 @@
 import type { AppData } from "@/types";
-import type { SuggestionInput } from "@/types/workflow";
+import type { ActivityTemplate, AvailabilityException, PublicationState, SuggestionInput } from "@/types/workflow";
 
 export type RuntimeConfig = {
   backendEnabled: boolean;
@@ -9,6 +9,12 @@ export type RuntimeConfig = {
 };
 
 export type SaveResult = "confirmed" | "submitted";
+
+export type WorkflowPayload = {
+  templates: ActivityTemplate[];
+  exceptions: AvailabilityException[];
+  publication: PublicationState;
+};
 
 const defaultConfig: RuntimeConfig = {
   backendEnabled: false,
@@ -57,9 +63,17 @@ export async function checkBackendReachable(config: RuntimeConfig): Promise<bool
 export async function loadRemoteData(config: RuntimeConfig): Promise<AppData | null> {
   if (!config.backendEnabled || !config.appsScriptUrl) return null;
   const url = buildUrl(config.appsScriptUrl, { action: "loadAll", ts: String(Date.now()) });
-  const payload = await getReadableJson(url);
+  const payload = await getJsonWithJsonpFallback(url);
   if (!payload?.ok) throw new Error(payload?.error || "Backend load failed");
   return payload.data as AppData;
+}
+
+export async function loadWorkflowData(config: RuntimeConfig): Promise<WorkflowPayload | null> {
+  if (!config.backendEnabled || !config.appsScriptUrl) return null;
+  const url = buildUrl(config.appsScriptUrl, { action: "loadWorkflow", ts: String(Date.now()) });
+  const payload = await getJsonWithJsonpFallback(url);
+  if (!payload?.ok) throw new Error(payload?.error || "Workflow load failed");
+  return payload.data as WorkflowPayload;
 }
 
 export async function saveRemoteData(config: RuntimeConfig, data: AppData): Promise<SaveResult> {
@@ -67,6 +81,16 @@ export async function saveRemoteData(config: RuntimeConfig, data: AppData): Prom
   const result = await postWithOpaqueFallback(config.appsScriptUrl, {
     action: "saveAll",
     data,
+    user: "Timetable platform"
+  });
+  return result.opaque ? "submitted" : "confirmed";
+}
+
+export async function saveWorkflowData(config: RuntimeConfig, workflow: WorkflowPayload): Promise<SaveResult> {
+  if (!config.backendEnabled || !config.appsScriptUrl) return "submitted";
+  const result = await postWithOpaqueFallback(config.appsScriptUrl, {
+    action: "saveWorkflow",
+    workflow,
     user: "Timetable platform"
   });
   return result.opaque ? "submitted" : "confirmed";
@@ -117,6 +141,8 @@ export async function askGemini(
     context: {
       rooms: data.rooms,
       lecturers: data.lecturers,
+      students: data.students,
+      programmes: data.programmes,
       studentGroups: data.studentGroups,
       modules: data.modules,
       sessions: data.sessions,
@@ -127,6 +153,15 @@ export async function askGemini(
   });
 
   return payload?.answer || null;
+}
+
+async function getJsonWithJsonpFallback(url: string) {
+  try {
+    return await getReadableJson(url);
+  } catch (error) {
+    if (typeof window === "undefined") throw error;
+    return jsonp(url);
+  }
 }
 
 async function getReadableJson(url: string) {
@@ -191,6 +226,29 @@ async function postWithOpaqueFallback(url: string, body: Record<string, unknown>
       window.clearTimeout(timer);
     }
   }
+}
+
+function jsonp(url: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const callbackName = `__ctiJsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const target = new URL(url);
+    target.searchParams.set("callback", callbackName);
+    const script = document.createElement("script");
+    const timer = window.setTimeout(() => cleanup(new Error("Backend JSONP request timed out")), REQUEST_TIMEOUT_MS);
+
+    function cleanup(error?: Error, payload?: unknown) {
+      window.clearTimeout(timer);
+      script.remove();
+      delete (window as unknown as Record<string, unknown>)[callbackName];
+      if (error) reject(error);
+      else resolve(payload);
+    }
+
+    (window as unknown as Record<string, unknown>)[callbackName] = (payload: unknown) => cleanup(undefined, payload);
+    script.onerror = () => cleanup(new Error("Backend JSONP request failed"));
+    script.src = target.toString();
+    document.head.appendChild(script);
+  });
 }
 
 function buildUrl(baseUrl: string, parameters: Record<string, string>) {
