@@ -9,14 +9,19 @@ export function validateTemplate(template: ActivityTemplate): TemplateValidation
   const durationInQuarterHours = template.durationHours * 4;
   return [
     {
-      label: "Module linked",
-      passed: Boolean(template.moduleCode && template.moduleName),
-      message: "A module must be linked to the activity template."
+      label: "Campus and programme linked",
+      passed: Boolean(template.campus && template.programme),
+      message: "A campus and campus-specific Programme of Study must be linked to the activity template."
     },
     {
-      label: "Student group assigned",
-      passed: Boolean(template.studentGroup),
-      message: "Select the student set or cohort attending the activity."
+      label: "Module linked",
+      passed: Boolean(template.moduleCode && template.moduleName),
+      message: "A campus-specific module must be linked to the activity template."
+    },
+    {
+      label: "Students allocated",
+      passed: Boolean((template.studentIds || []).length || template.studentGroup),
+      message: "Allocate individual students to the activity before scheduling."
     },
     {
       label: "Activity description",
@@ -41,12 +46,12 @@ export function validateTemplate(template: ActivityTemplate): TemplateValidation
     {
       label: "Tutor suitability",
       passed: Boolean(template.lecturerSuitability),
-      message: "Choose the tutor team or suitability required to deliver this activity."
+      message: "Choose the staff member or tutor suitability required to deliver this activity."
     },
     {
       label: "Room suitability",
       passed: Boolean(template.roomSuitability),
-      message: "Choose the type of room suitable for this activity."
+      message: "Choose the type of location suitable for this activity."
     }
   ];
 }
@@ -58,12 +63,13 @@ export function templateStatus(template: ActivityTemplate): ActivityTemplate["st
 export function readinessSummary(data: AppData, templates: ActivityTemplate[]) {
   const blockedTemplates = templates.filter(template => templateStatus(template) === "Blocked").length;
   const openConflicts = data.conflicts.filter(conflict => !conflict.resolved).length;
+  const students = data.students || [];
   const checks = [
     { label: "Activity templates validated", passed: blockedTemplates === 0, detail: blockedTemplates ? `${blockedTemplates} template${blockedTemplates === 1 ? "" : "s"} require attention` : `${templates.length} templates ready` },
     { label: "Scheduled activities available", passed: data.sessions.length > 0, detail: `${data.sessions.length} scheduled sessions` },
     { label: "No unresolved timetable conflicts", passed: openConflicts === 0, detail: openConflicts ? `${openConflicts} conflict${openConflicts === 1 ? "" : "s"} require review` : "No open conflicts" },
-    { label: "Rooms and lecturers loaded", passed: data.rooms.length > 0 && data.lecturers.length > 0, detail: `${data.rooms.length} rooms and ${data.lecturers.length} lecturers` },
-    { label: "Student groups linked", passed: data.studentGroups.length > 0 && templates.every(template => Boolean(template.studentGroup)), detail: `${data.studentGroups.length} student groups` }
+    { label: "Locations and staff loaded", passed: data.rooms.length > 0 && data.lecturers.length > 0, detail: `${data.rooms.length} locations and ${data.lecturers.length} staff records` },
+    { label: "Individual students loaded", passed: students.length > 0 && templates.every(template => Boolean((template.studentIds || []).length || template.studentGroup)), detail: `${students.length} individual student records` }
   ];
   return {
     checks,
@@ -111,23 +117,27 @@ export function formatWeekPattern(weeks: number[]) {
 function createTemplate(module: Module, data: AppData, index: number): ActivityTemplate {
   const requirement = data.requirements.find(item => item.moduleCode === module.code);
   const group = data.studentGroups.find(item => item.name === (module.studentGroup || requirement?.studentGroup))
-    || data.studentGroups.find(item => item.course === module.course);
+    || data.studentGroups.find(item => item.course === module.course && (!module.campus || item.campus === module.campus));
   const lecturer = data.lecturers.find(item => item.id === module.lecturerId || item.name === module.lecturerName || item.modules.includes(module.code));
   const activityType = activityTypeFromRoom(module.roomTypeRequired || requirement?.requiredRoomType || "Teaching room");
+  const campus = module.campus || group?.campus || lecturer?.primaryCampus || lecturer?.preferredCampus || "Birmingham";
+  const students = (data.students || []).filter(student => student.campus === campus && student.moduleCodes.includes(module.code));
+  const programme = data.programmes?.find(item => item.id === module.programmeId) || data.programmes?.find(item => item.campus === campus && item.code === module.course);
   const template: ActivityTemplate = {
     id: `AT-${module.id || String(index + 1).padStart(3, "0")}`,
-    name: `${group?.campus || "Campus"} – ${module.course} – ${module.name} ${activityType}`,
-    campus: group?.campus || lecturer?.preferredCampus || "Main Campus",
-    programme: module.course,
+    name: `${campus} – ${programme?.code || module.course} – ${module.name} ${activityType}`,
+    campus,
+    programme: programme?.code || module.course,
     moduleCode: module.code,
     moduleName: module.name,
     activityType,
-    plannedSize: group?.studentCount || 0,
+    plannedSize: group?.studentCount || students.length || 0,
     durationHours: module.hoursPerSession || 2,
     weeklySessions: module.weeklySessions || 1,
     teachingWeeks: Array.from({ length: 12 }, (_, week) => week + 1),
+    studentIds: students.map(student => student.id),
     studentGroup: group?.name || module.studentGroup || requirement?.studentGroup || "",
-    lecturerSuitability: lecturer ? `TR-${slug(module.course)}-${slug(module.name)}` : "",
+    lecturerSuitability: lecturer ? lecturer.name : "",
     roomSuitability: `RM-${activityType}`,
     preferredDays: requirement?.preferredDays || "",
     preferredTime: requirement?.preferredTime || "",
@@ -145,8 +155,4 @@ function activityTypeFromRoom(value: string) {
   if (text.includes("oral")) return "Oral Skills";
   if (text.includes("meeting")) return "Meeting";
   return "Workshop";
-}
-
-function slug(value: string) {
-  return value.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
 }
