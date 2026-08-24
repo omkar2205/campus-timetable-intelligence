@@ -1,4 +1,4 @@
-import type { AppData, Lecturer, Module, Programme, Student } from "@/types";
+import type { AppData, Lecturer, Module, Programme, Room, Student } from "@/types";
 
 const programmeNames: Record<string, string> = {
   BPC: "Bar Practice Course",
@@ -8,7 +8,23 @@ const programmeNames: Record<string, string> = {
   SQE1: "Solicitors Qualifying Examination 1"
 };
 
+const pilotCapacityOverrides: Record<string, number> = {
+  "BHM-109-LG": 60,
+  "BHM-201-WS": 60,
+  "BHM-202-WS": 60,
+  "BHM-210-LG": 90,
+  "BHM-230-IT": 60,
+  "MAN-102-WS": 60,
+  "MAN-110-LG": 80,
+  "MAN-150-MC": 42
+};
+
 export function normaliseCampusData(input: AppData): AppData {
+  const rooms = input.rooms.map(room => ({
+    ...room,
+    capacity: room.id && pilotCapacityOverrides[room.id] ? pilotCapacityOverrides[room.id] : room.capacity
+  }));
+
   const modules = input.modules.map(module => ({
     ...module,
     campus: module.campus || campusFromModule(module, input),
@@ -17,21 +33,36 @@ export function normaliseCampusData(input: AppData): AppData {
 
   const programmes = input.programmes?.length
     ? input.programmes
-    : deriveProgrammes({ ...input, modules });
+    : deriveProgrammes({ ...input, rooms, modules });
 
   const lecturers = input.lecturers.map(lecturer => normaliseLecturer(lecturer, modules));
   const students = input.students?.length
     ? input.students.map(student => ({ ...student, moduleCodes: student.moduleCodes || [] }))
-    : derivePilotStudents({ ...input, modules, programmes });
+    : derivePilotStudents({ ...input, rooms, modules, programmes });
 
   const sessions = input.sessions.map(session => {
+    const module = modules.find(item => item.code === session.moduleCode);
+    const targetCampus = module?.campus || session.campus;
+    const currentRoom = rooms.find(room => room.room === session.room && room.campus === targetCampus);
+    const suitableRoom = currentRoom || findSuitableCampusRoom(rooms, targetCampus, module?.roomTypeRequired, session.enrolled);
+    const currentGroup = input.studentGroups.find(group => group.name === session.group && group.campus === targetCampus);
+    const suitableGroup = currentGroup || input.studentGroups.find(group => group.campus === targetCampus && group.course === (module?.course || session.course));
     const allocated = session.studentIds?.length
       ? session.studentIds
-      : students.filter(student => student.campus === session.campus && student.moduleCodes.includes(session.moduleCode)).map(student => student.id);
-    return { ...session, studentIds: allocated };
+      : students.filter(student => student.campus === targetCampus && student.moduleCodes.includes(session.moduleCode)).map(student => student.id);
+
+    return {
+      ...session,
+      campus: targetCampus,
+      room: suitableRoom?.room || session.room,
+      capacity: suitableRoom?.capacity || session.capacity,
+      group: suitableGroup?.name || session.group,
+      enrolled: suitableGroup?.studentCount || session.enrolled,
+      studentIds: allocated
+    };
   });
 
-  return { ...input, modules, lecturers, programmes, students, sessions };
+  return { ...input, rooms, modules, lecturers, programmes, students, sessions };
 }
 
 export function campusFromModule(module: Module, data: AppData) {
@@ -61,6 +92,21 @@ export function campusesFromData(data: AppData) {
     ...(data.programmes || []).map(programme => programme.campus),
     ...data.modules.map(module => module.campus || campusFromModule(module, data))
   ].filter(Boolean))).sort();
+}
+
+function findSuitableCampusRoom(rooms: Room[], campus: string, requiredType?: string, enrolled = 0) {
+  const campusRooms = rooms.filter(room => room.campus === campus && room.status !== "Maintenance");
+  const type = normaliseRoomType(requiredType);
+  const typeMatches = campusRooms.filter(room => {
+    const roomType = normaliseRoomType(room.type);
+    return !type || roomType.includes(type) || type.includes(roomType);
+  });
+  const candidates = typeMatches.length ? typeMatches : campusRooms;
+  return [...candidates].sort((a, b) => {
+    const fitA = a.capacity >= enrolled ? 0 : 1;
+    const fitB = b.capacity >= enrolled ? 0 : 1;
+    return fitA - fitB || Math.abs(a.capacity - enrolled) - Math.abs(b.capacity - enrolled);
+  })[0];
 }
 
 function normaliseLecturer(lecturer: Lecturer, modules: Module[]): Lecturer {
@@ -118,6 +164,10 @@ function derivePilotStudents(data: AppData): Student[] {
     }
   });
   return students;
+}
+
+function normaliseRoomType(value?: string) {
+  return String(value || "").toLowerCase().replace(/room|classroom|teaching/g, "").replace(/[^a-z0-9]/g, "").trim();
 }
 
 function slug(value: string) {
