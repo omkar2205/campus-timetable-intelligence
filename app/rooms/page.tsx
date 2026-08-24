@@ -2,5 +2,5 @@ import { AppShell } from "@/components/app-shell";
 import { RoomTable } from "@/components/room-table";
 
 export default function RoomsPage() {
-  return <AppShell title="Room Booking" subtitle="Search room availability, create bookings and review utilisation"><RoomTable/></AppShell>;
+  return <AppShell title="Locations" subtitle="Maintain campus locations, review availability and create room bookings"><RoomTable/></AppShell>;
 }
