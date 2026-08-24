@@ -13,6 +13,7 @@ import {
   FileBarChart,
   GraduationCap,
   LayoutDashboard,
+  LibraryBig,
   MessageSquareText,
   Send,
   Settings,
@@ -30,6 +31,7 @@ const sections = [
   {
     label: "Planning",
     items: [
+      { href: "/programmes", label: "Programmes & Modules", icon: LibraryBig },
       { href: "/planning", label: "Activity Planning", icon: ClipboardList },
       { href: "/availability", label: "Availability", icon: Clock3 },
       { href: "/import", label: "Data Import", icon: Database }
@@ -39,9 +41,9 @@ const sections = [
     label: "Scheduling",
     items: [
       { href: "/timetable", label: "Timetable", icon: CalendarDays },
-      { href: "/rooms", label: "Room Booking", icon: Building2 },
-      { href: "/lecturers", label: "Lecturers", icon: UserRoundCog },
-      { href: "/students", label: "Student Schedules", icon: GraduationCap },
+      { href: "/rooms", label: "Locations", icon: Building2 },
+      { href: "/lecturers", label: "Staff", icon: UserRoundCog },
+      { href: "/students", label: "Students", icon: GraduationCap },
       { href: "/conflicts", label: "Conflict Alerts", icon: Siren }
     ]
   },

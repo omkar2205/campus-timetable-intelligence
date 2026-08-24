@@ -1,4 +1,5 @@
 import { AppData, Conflict, Lecturer, Session } from "@/types";
+import { staffCanTeachAtCampus } from "@/lib/master-data";
 
 const dayMap: Record<string, string> = {
   mon: "Monday",
@@ -68,8 +69,10 @@ function sameScheduleDate(a: Session, b: Session) {
   return a.day === b.day;
 }
 
-function lecturerAvailable(lecturer: Lecturer | undefined, day: string, start: string, end: string) {
-  if (!lecturer?.availability) return true;
+function lecturerAvailable(lecturer: Lecturer | undefined, campus: string, day: string, start: string, end: string) {
+  if (!lecturer) return true;
+  if (campus && !staffCanTeachAtCampus(lecturer, campus)) return false;
+  if (!lecturer.availability) return true;
   const availability = lecturer.availability;
   const listedDays = parseDays(availability);
   if (listedDays.length && !listedDays.includes(day)) return false;
@@ -83,7 +86,9 @@ function isSlotFree(existing: Session[], candidate: Omit<Session, "id">) {
   return !existing.some(session => {
     if (!sameScheduleDate(session, candidate as Session)) return false;
     if (!overlaps(session.start, session.end, candidate.start, candidate.end)) return false;
-    return session.room === candidate.room || session.lecturer === candidate.lecturer || session.group === candidate.group;
+    if (session.room === candidate.room || session.lecturer === candidate.lecturer || session.group === candidate.group) return true;
+    const firstStudents = new Set(session.studentIds || []);
+    return (candidate.studentIds || []).some(studentId => firstStudents.has(studentId));
   });
 }
 
@@ -96,7 +101,8 @@ export function generateTimetable(input: AppData): AppData {
     const requirement = input.requirements.find(item => item.moduleCode.toUpperCase() === module.code.toUpperCase());
     const lecturer = input.lecturers.find(item => item.id === module.lecturerId || item.name === module.lecturerName || item.modules.includes(module.code));
     const group = input.studentGroups.find(item => item.name === (module.studentGroup || requirement?.studentGroup))
-      || input.studentGroups.find(item => item.course === module.course);
+      || input.studentGroups.find(item => item.course === module.course && (!module.campus || item.campus === module.campus));
+    const targetCampus = module.campus || group?.campus || lecturer?.primaryCampus || lecturer?.preferredCampus || "Birmingham";
     const requiredType = requirement?.requiredRoomType || module.roomTypeRequired || "Lecture Hall";
     const avoidedDays = parseDays(requirement?.avoidDays);
     const requestedDays = preferredDays(requirement?.preferredDays).filter(day => !avoidedDays.includes(day));
@@ -104,18 +110,34 @@ export function generateTimetable(input: AppData): AppData {
     const candidateSlots = preferredSlots(requirement?.preferredTime);
     const repeats = Math.max(1, Number(module.weeklySessions || 1));
     const duration = Math.max(0.5, Number(module.hoursPerSession || 2));
+    const allocatedStudents = (input.students || [])
+      .filter(student => student.campus === targetCampus && student.moduleCodes.includes(module.code))
+      .map(student => student.id);
+
+    if (lecturer && !staffCanTeachAtCampus(lecturer, targetCampus)) {
+      conflicts.push({
+        id: `campus-staff-${module.code}`,
+        severity: "Critical",
+        type: "Staff campus restriction",
+        module: module.code,
+        lecturer: lecturer.name,
+        room: "No room assigned",
+        time: targetCampus,
+        description: `${lecturer.name} is not currently configured to teach at ${targetCampus}.`,
+        fix: "Add the campus to the staff member's teaching campuses or assign another suitable staff member."
+      });
+      continue;
+    }
 
     for (let repeat = 0; repeat < repeats; repeat += 1) {
-      const typeMatched = input.rooms.filter(room => room.status !== "Maintenance" && roomTypeMatches(room.type, requiredType));
-      const availableRooms = (typeMatched.length ? typeMatched : input.rooms.filter(room => room.status !== "Maintenance"))
+      const campusRooms = input.rooms.filter(room => room.status !== "Maintenance" && room.campus === targetCampus);
+      const typeMatched = campusRooms.filter(room => roomTypeMatches(room.type, requiredType));
+      const availableRooms = (typeMatched.length ? typeMatched : campusRooms)
         .sort((a, b) => {
-          const campusA = group && a.campus === group.campus ? 0 : 1;
-          const campusB = group && b.campus === group.campus ? 0 : 1;
-          if (campusA !== campusB) return campusA - campusB;
-          const capacityA = a.capacity >= (group?.studentCount || 0) ? 0 : 1;
-          const capacityB = b.capacity >= (group?.studentCount || 0) ? 0 : 1;
+          const capacityA = a.capacity >= (group?.studentCount || allocatedStudents.length) ? 0 : 1;
+          const capacityB = b.capacity >= (group?.studentCount || allocatedStudents.length) ? 0 : 1;
           if (capacityA !== capacityB) return capacityA - capacityB;
-          return Math.abs(a.capacity - (group?.studentCount || 0)) - Math.abs(b.capacity - (group?.studentCount || 0));
+          return Math.abs(a.capacity - (group?.studentCount || allocatedStudents.length)) - Math.abs(b.capacity - (group?.studentCount || allocatedStudents.length));
         });
 
       let placed: Session | null = null;
@@ -123,7 +145,7 @@ export function generateTimetable(input: AppData): AppData {
       for (const day of candidateDays) {
         for (const start of candidateSlots) {
           const end = addHours(start, duration);
-          if (!lecturerAvailable(lecturer, day, start, end)) continue;
+          if (!lecturerAvailable(lecturer, targetCampus, day, start, end)) continue;
 
           for (const room of availableRooms) {
             const candidate: Omit<Session, "id"> = {
@@ -135,11 +157,12 @@ export function generateTimetable(input: AppData): AppData {
               moduleName: module.name,
               lecturer: lecturer?.name || module.lecturerName || "Unassigned lecturer",
               room: room.room,
-              campus: room.campus,
-              group: group?.name || module.studentGroup || "Unassigned group",
+              campus: targetCampus,
+              group: group?.name || module.studentGroup || module.course,
               course: module.course,
               capacity: room.capacity,
-              enrolled: group?.studentCount || 0,
+              enrolled: group?.studentCount || allocatedStudents.length,
+              studentIds: allocatedStudents,
               status: "Scheduled"
             };
 
@@ -164,10 +187,10 @@ export function generateTimetable(input: AppData): AppData {
           type: "Unscheduled session",
           module: module.code,
           lecturer: lecturer?.name || module.lecturerName || "Unassigned lecturer",
-          room: "No room assigned",
+          room: `No suitable ${targetCampus} room assigned`,
           time: "No available slot",
-          description: "No clash-free room and time could be found using the current constraints.",
-          fix: "Review lecturer availability, room capacity, room type or preferred teaching times."
+          description: `No clash-free ${targetCampus} room and time could be found using the current campus, availability and suitability constraints.`,
+          fix: "Review staff campus access, availability, room capacity, room type or preferred teaching times."
         });
       }
     }
@@ -178,7 +201,7 @@ export function generateTimetable(input: AppData): AppData {
 }
 
 export function detectConflicts(data: AppData): Conflict[] {
-  const conflicts: Conflict[] = data.conflicts.filter(conflict => conflict.type === "Unscheduled session");
+  const conflicts: Conflict[] = data.conflicts.filter(conflict => conflict.type === "Unscheduled session" || conflict.type === "Staff campus restriction");
   const activeSessions = data.sessions.filter(session => session.status !== "Cancelled");
 
   for (const session of activeSessions) {
@@ -192,7 +215,37 @@ export function detectConflicts(data: AppData): Conflict[] {
         room: session.room,
         time: sessionLabel(session),
         description: `${session.enrolled} students are assigned to a room with capacity ${session.capacity}.`,
-        fix: "Move the session to a larger suitable room or split the student group."
+        fix: "Move the session to a larger suitable room or split the teaching allocation."
+      });
+    }
+
+    const module = data.modules.find(item => item.code === session.moduleCode);
+    if (module?.campus && module.campus !== session.campus) {
+      conflicts.push({
+        id: `module-campus-${session.id}`,
+        severity: "Critical",
+        type: "Module campus mismatch",
+        module: session.moduleCode,
+        lecturer: session.lecturer,
+        room: session.room,
+        time: sessionLabel(session),
+        description: `${module.code} is maintained under ${module.campus}, but this session is scheduled at ${session.campus}.`,
+        fix: `Move the session to ${module.campus} or use the campus-specific module record.`
+      });
+    }
+
+    const lecturer = data.lecturers.find(item => item.name === session.lecturer);
+    if (lecturer && !staffCanTeachAtCampus(lecturer, session.campus)) {
+      conflicts.push({
+        id: `staff-campus-${session.id}`,
+        severity: "Critical",
+        type: "Staff campus restriction",
+        module: session.moduleCode,
+        lecturer: session.lecturer,
+        room: session.room,
+        time: sessionLabel(session),
+        description: `${session.lecturer} is not configured to teach at ${session.campus}.`,
+        fix: "Update the staff member's additional campuses or assign another staff member."
       });
     }
   }
@@ -212,8 +265,8 @@ export function detectConflicts(data: AppData): Conflict[] {
           lecturer: `${first.lecturer} / ${second.lecturer}`,
           room: first.room,
           time: overlapLabel(first, second),
-          description: "Two sessions overlap in the same room.",
-          fix: "Move one session to another available room or time."
+          description: "Two sessions overlap in the same location.",
+          fix: "Move one session to another available location or time."
         });
       }
 
@@ -221,26 +274,40 @@ export function detectConflicts(data: AppData): Conflict[] {
         conflicts.push({
           id: `lecturer-${first.id}-${second.id}`,
           severity: "Critical",
-          type: "Lecturer double booking",
+          type: "Staff double booking",
           module: `${first.moduleCode} / ${second.moduleCode}`,
           lecturer: first.lecturer,
           room: `${first.room} / ${second.room}`,
           time: overlapLabel(first, second),
-          description: "The same lecturer is assigned to overlapping sessions.",
-          fix: "Move one session to another teaching block or assign another lecturer."
+          description: "The same staff member is assigned to overlapping sessions.",
+          fix: "Move one session to another teaching block or assign another staff member."
         });
       }
 
-      if (first.group === second.group) {
+      const firstStudents = new Set(first.studentIds || []);
+      const sharedStudents = (second.studentIds || []).filter(studentId => firstStudents.has(studentId));
+      if (sharedStudents.length) {
         conflicts.push({
-          id: `group-${first.id}-${second.id}`,
+          id: `students-${first.id}-${second.id}`,
           severity: "High",
-          type: "Student group clash",
+          type: "Individual student clash",
           module: `${first.moduleCode} / ${second.moduleCode}`,
           lecturer: `${first.lecturer} / ${second.lecturer}`,
           room: `${first.room} / ${second.room}`,
           time: overlapLabel(first, second),
-          description: "The same student group is assigned to overlapping sessions.",
+          description: `${sharedStudents.length} individually allocated student${sharedStudents.length === 1 ? " is" : "s are"} assigned to overlapping sessions.`,
+          fix: "Move one session or change the individual student allocation."
+        });
+      } else if (first.group && second.group && first.group === second.group) {
+        conflicts.push({
+          id: `group-${first.id}-${second.id}`,
+          severity: "High",
+          type: "Cohort clash",
+          module: `${first.moduleCode} / ${second.moduleCode}`,
+          lecturer: `${first.lecturer} / ${second.lecturer}`,
+          room: `${first.room} / ${second.room}`,
+          time: overlapLabel(first, second),
+          description: "The same cohort is assigned to overlapping sessions.",
           fix: "Move one session to another available teaching block."
         });
       }

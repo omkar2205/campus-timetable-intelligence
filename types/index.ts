@@ -17,6 +17,8 @@ export type Lecturer = {
   availability: string;
   workload: "Normal" | "High" | "Overloaded" | string;
   preferredCampus?: string;
+  primaryCampus?: string;
+  additionalCampuses?: string[];
   maxWeeklyHours?: number;
 };
 
@@ -28,11 +30,34 @@ export type StudentGroup = {
   campus: string;
 };
 
+export type Programme = {
+  id: string;
+  code: string;
+  name: string;
+  campus: string;
+  academicYear: string;
+  status: "Active" | "Inactive" | string;
+};
+
+export type Student = {
+  id: string;
+  name: string;
+  email?: string;
+  campus: string;
+  programmeId: string;
+  programme: string;
+  cohort?: string;
+  moduleCodes: string[];
+  status: "Active" | "Inactive" | string;
+};
+
 export type Module = {
   id?: string;
   code: string;
   name: string;
   course: string;
+  campus?: string;
+  programmeId?: string;
   lecturerId?: string;
   lecturerName?: string;
   weeklySessions?: number;
@@ -57,6 +82,7 @@ export type Session = {
   course: string;
   capacity: number;
   enrolled: number;
+  studentIds?: string[];
   conflict?: string;
   status?: "Scheduled" | "Cancelled" | "Draft" | string;
 };
@@ -87,6 +113,8 @@ export type AppData = {
   rooms: Room[];
   lecturers: Lecturer[];
   studentGroups: StudentGroup[];
+  students?: Student[];
+  programmes?: Programme[];
   modules: Module[];
   sessions: Session[];
   conflicts: Conflict[];
