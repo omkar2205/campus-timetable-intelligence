@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DataProvider } from "@/components/data-context";
 import { WorkflowProvider } from "@/components/workflow-context";
 
-const MIGRATION_FLAG = "cti-production-pilot-v1-ready";
+const MIGRATION_FLAG = "cti-campus-master-data-v2-ready";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -12,9 +12,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       if (!localStorage.getItem(MIGRATION_FLAG)) {
-        localStorage.removeItem("cti-demo-data-v3-empty-live");
-        localStorage.removeItem("cti-demo-staged-data-v3-empty-live");
-        localStorage.removeItem("cti-working-demo-v4-ready");
+        [
+          "cti-demo-data-v3-empty-live",
+          "cti-demo-staged-data-v3-empty-live",
+          "cti-working-demo-v4-ready",
+          "cti-platform-data-v5",
+          "cti-platform-staged-v5",
+          "cti-platform-data-v6",
+          "cti-platform-staged-v6",
+          "cti-guide-workflow-v1"
+        ].forEach(key => localStorage.removeItem(key));
         localStorage.setItem(MIGRATION_FLAG, "true");
       }
     } catch {}
