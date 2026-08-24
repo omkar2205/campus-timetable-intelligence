@@ -2,8 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { initialData } from "@/data/mock";
-import { AppData, Lecturer, Module, Room, SchedulingRequirement, Session, StudentGroup } from "@/types";
+import { AppData, Lecturer, Module, Programme, Room, SchedulingRequirement, Session, Student, StudentGroup } from "@/types";
 import { detectConflicts, generateTimetable } from "@/lib/scheduler";
+import { normaliseCampusData } from "@/lib/master-data";
 import {
   checkBackendReachable,
   getRuntimeConfig,
@@ -12,8 +13,8 @@ import {
   saveRemoteData
 } from "@/lib/backend";
 
-const STORAGE_KEY = "cti-platform-data-v6";
-const STAGED_STORAGE_KEY = "cti-platform-staged-v6";
+const STORAGE_KEY = "cti-platform-data-v7";
+const STAGED_STORAGE_KEY = "cti-platform-staged-v7";
 
 const SEEDED_CONFLICT_IDS = new Set(["C001", "C002", "C003", "C004", "C005"]);
 const SEEDED_CONFLICT_MODULES = new Set([
@@ -38,10 +39,15 @@ type DataContextValue = {
   updateSession: (id: string, patch: Partial<Session>) => void;
   resolveConflict: (id?: string) => void;
   addManualSession: (session: Session) => void;
+  addLecturer: (lecturer: Lecturer) => void;
+  addRoom: (room: Room) => void;
+  addStudent: (student: Student) => void;
+  addProgramme: (programme: Programme) => void;
+  addModule: (module: Module) => void;
   syncNow: () => Promise<void>;
 };
 
-const emptyData = (): AppData => ({ rooms: [], lecturers: [], studentGroups: [], modules: [], sessions: [], conflicts: [], requirements: [] });
+const emptyData = (): AppData => ({ rooms: [], lecturers: [], studentGroups: [], students: [], programmes: [], modules: [], sessions: [], conflicts: [], requirements: [] });
 const defaultBackendConfig: RuntimeConfig = { backendEnabled: false, appsScriptUrl: "", geminiEnabled: false, dataMode: "training" };
 const DataContext = createContext<DataContextValue | null>(null);
 
@@ -63,8 +69,12 @@ function withoutSeededConflicts(value: AppData): AppData {
   };
 }
 
+function prepareData(value: AppData) {
+  return normaliseCampusData(withoutSeededConflicts(value));
+}
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const cleanInitialData = useMemo(() => withoutSeededConflicts(structuredClone(initialData)), []);
+  const cleanInitialData = useMemo(() => prepareData(structuredClone(initialData)), []);
   const [data, setData] = useState<AppData>(cleanInitialData);
   const [stagedData, setStagedData] = useState<AppData>(emptyData());
   const [loaded, setLoaded] = useState(false);
@@ -81,8 +91,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         const staged = localStorage.getItem(STAGED_STORAGE_KEY);
-        if (saved) localData = withoutSeededConflicts(JSON.parse(saved));
-        if (staged) localStaged = JSON.parse(staged);
+        if (saved) localData = prepareData(JSON.parse(saved));
+        if (staged) localStaged = normaliseCampusData(JSON.parse(staged));
       } catch {}
 
       if (!active) return;
@@ -98,7 +108,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         try {
           const remoteData = await loadRemoteData(config);
           if (active && remoteData && remoteData.rooms.length) {
-            const cleanedRemote = withoutSeededConflicts(remoteData);
+            const cleanedRemote = prepareData(remoteData);
             setData(cleanedRemote);
             const removedSeededContent = cleanedRemote.conflicts.length !== remoteData.conflicts.length
               || cleanedRemote.sessions.some((session, index) => session.conflict !== remoteData.sessions[index]?.conflict);
@@ -142,13 +152,21 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       });
   }, [backendConfig]);
 
+  const updateData = useCallback((builder: (current: AppData) => AppData) => {
+    setData(current => {
+      const next = prepareData(builder(current));
+      persistLiveData(next);
+      return next;
+    });
+  }, [persistLiveData]);
+
   const value = useMemo<DataContextValue>(() => ({
     data,
     stagedData,
     backendConfig,
     backendStatus,
     resetData: () => {
-      const restored = withoutSeededConflicts(structuredClone(initialData));
+      const restored = prepareData(structuredClone(initialData));
       setData(restored);
       setStagedData(emptyData());
       try {
@@ -157,32 +175,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       } catch {}
       persistLiveData(restored);
     },
-    importRows: (type, rows) => setStagedData(current => ({ ...current, ...mapImport(type, rows), sessions: [], conflicts: [], generatedAt: undefined })),
+    importRows: (type, rows) => setStagedData(current => normaliseCampusData({ ...current, ...mapImport(type, rows), sessions: [], conflicts: [], generatedAt: undefined })),
     generateSchedule: () => {
       const source = hasStagedSchedulingData(stagedData)
         ? stagedData
         : { ...data, sessions: [], conflicts: [], generatedAt: undefined };
-      const next = generateTimetable(source);
+      const next = prepareData(generateTimetable(normaliseCampusData(source)));
       setData(next);
       persistLiveData(next);
     },
-    updateSession: (id, patch) => setData(current => {
+    updateSession: (id, patch) => updateData(current => {
       const sessions = current.sessions.map(session => session.id === id ? { ...session, ...patch } : session);
-      const next = { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
-      persistLiveData(next);
-      return next;
+      return { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
     }),
-    resolveConflict: (id) => setData(current => {
-      const next = { ...current, conflicts: current.conflicts.map(conflict => conflict.id === id ? { ...conflict, resolved: true, severity: "Low" } : conflict) };
-      persistLiveData(next);
-      return next;
-    }),
-    addManualSession: (session) => setData(current => {
+    resolveConflict: (id) => updateData(current => ({
+      ...current,
+      conflicts: current.conflicts.map(conflict => conflict.id === id ? { ...conflict, resolved: true, severity: "Low" } : conflict)
+    })),
+    addManualSession: (session) => updateData(current => {
       const sessions = [...current.sessions, session];
-      const next = { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
-      persistLiveData(next);
-      return next;
+      return { ...current, sessions, conflicts: detectConflicts({ ...current, sessions }) };
     }),
+    addLecturer: lecturer => updateData(current => ({ ...current, lecturers: [...current.lecturers, lecturer] })),
+    addRoom: room => updateData(current => ({ ...current, rooms: [...current.rooms, room] })),
+    addStudent: student => updateData(current => ({ ...current, students: [...(current.students || []), student] })),
+    addProgramme: programme => updateData(current => ({ ...current, programmes: [...(current.programmes || []), programme] })),
+    addModule: module => updateData(current => ({ ...current, modules: [...current.modules, module] })),
     syncNow: async () => {
       if (!backendConfig.backendEnabled || !backendConfig.appsScriptUrl) return;
       setBackendStatus("Syncing");
@@ -194,7 +212,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         throw error;
       }
     }
-  }), [data, stagedData, backendConfig, backendStatus, persistLiveData]);
+  }), [data, stagedData, backendConfig, backendStatus, persistLiveData, updateData]);
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
@@ -210,7 +228,7 @@ function mapImport(type: ImportType, rows: Record<string, string>[]): Partial<Ap
     const rooms: Room[] = rows.map((row, index) => ({
       id: row.room_id || `R${index + 1}`,
       room: row.room_name || row.room || "Unnamed Room",
-      campus: row.campus || "Main Campus",
+      campus: row.campus || "Birmingham",
       building: row.building || "Main Building",
       type: row.room_type || row.type || "Lecture Hall",
       capacity: Number(row.capacity || 0),
@@ -227,7 +245,9 @@ function mapImport(type: ImportType, rows: Record<string, string>[]): Partial<Ap
       maxWeeklyHours: Number(row.max_weekly_hours || 18),
       weeklyHours: 0,
       availability: row.availability || "Mon-Fri 09:00-17:00",
-      preferredCampus: row.preferred_campus || "Main Campus",
+      preferredCampus: row.preferred_campus || row.primary_campus || "Birmingham",
+      primaryCampus: row.primary_campus || row.preferred_campus || "Birmingham",
+      additionalCampuses: String(row.additional_campuses || "").split(/[|,]/).map(item => item.trim()).filter(Boolean),
       workload: "Normal",
       modules: []
     }));
@@ -240,7 +260,7 @@ function mapImport(type: ImportType, rows: Record<string, string>[]): Partial<Ap
       name: row.group_name || row.name || "Unnamed Group",
       course: row.course || "General",
       studentCount: Number(row.student_count || row.students || 0),
-      campus: row.campus || "Main Campus"
+      campus: row.campus || "Birmingham"
     }));
     return { studentGroups };
   }
@@ -251,6 +271,8 @@ function mapImport(type: ImportType, rows: Record<string, string>[]): Partial<Ap
       code: row.module_code || row.code || "MOD000",
       name: row.module_name || row.name || "Unnamed Module",
       course: row.course || "General",
+      campus: row.campus || undefined,
+      programmeId: row.programme_id || undefined,
       lecturerId: row.lecturer_id || undefined,
       lecturerName: row.lecturer_name || undefined,
       weeklySessions: Number(row.weekly_sessions || 1),
